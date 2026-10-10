@@ -14,7 +14,7 @@ body {
 
 /* ---- screens ---- */
 .screen { height: 100%; display: grid; gap: var(--gap); min-height: 0; }
-.screen[hidden] { display: none; }
+[hidden] { display: none !important; }
 #reader { grid-template-columns: minmax(0, 1fr); }
 #reader .panel { display: none; }
 #reader.text-on { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
@@ -24,6 +24,8 @@ body {
 }
 .controls { display: grid; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 0.6fr); gap: var(--gap); min-height: 0; }
 .row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.6fr) minmax(0, 1fr); gap: var(--gap); min-height: 0; }
+.row.compact { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.row.compact .glyph { font-size: 2.2em; }
 
 /* ---- buttons ---- */
 .btn {
@@ -42,7 +44,8 @@ body {
 .btn.describing { outline: var(--border) solid var(--hi); outline-offset: 3px; }
 .btn .lbl { display: block; width: 100%; min-width: 0; max-width: 100%; overflow: hidden; text-align: center; }
 .btn .lbl.nowrap { white-space: nowrap; }
-.btn .glyph { font-size: 1.5em; line-height: 1; }
+.btn .glyph { font-size: 1.5em; line-height: 1; display: inline-flex; align-items: center; gap: 0.15em; }
+.btn .glyph .ico { width: 1.1em; height: 1.1em; flex: none; }
 .btn .sub { font-size: 0.5em; letter-spacing: 0.1em; }
 .btn .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--hi); opacity: 0.5; pointer-events: none; transition: none; }
 .btn.holding .fill { width: 100%; transition: width var(--hold-ms, 1000ms) linear; }

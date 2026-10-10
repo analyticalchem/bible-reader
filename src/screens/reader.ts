@@ -8,6 +8,32 @@ function row(...buttons: HTMLElement[]): HTMLDivElement {
   return div('row', ...buttons);
 }
 
+// Icons for the arrows-only view, where the book and chapter rows would otherwise look alike:
+// an open book for the book row, a single page for the chapter row. Drawn in the button's own color.
+const ICON_BOOK =
+  '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 5.5C5 3.5 9 3.5 12 6c3-2.5 7-2.5 10-.5v14c-3-2-7-2-10 .5-3-2.5-7-2.5-10-.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 6v14" stroke="currentColor" stroke-width="2"/></svg>';
+const ICON_PAGE =
+  '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h9l5 5v15H6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 2v6h6M9 13h7M9 17h7" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+
+/** Previous/next arrows: plain chevrons normally; with icons and a chevron count in the arrows-only view. */
+function setArrows(compact: boolean): void {
+  const g = (id: string, html: string) => {
+    const el = $(`#${id} .glyph`);
+    el.innerHTML = html;
+  };
+  if (compact) {
+    g('bPrevBook', `◀◀${ICON_BOOK}`);
+    g('bNextBook', `${ICON_BOOK}▶▶`);
+    g('bPrevChap', `◀${ICON_PAGE}`);
+    g('bNextChap', `${ICON_PAGE}▶`);
+  } else {
+    g('bPrevBook', '◀');
+    g('bNextBook', '▶');
+    g('bPrevChap', '◀');
+    g('bNextChap', '▶');
+  }
+}
+
 export function build(): HTMLElement {
   const s = document.createElement('section');
   s.id = 'reader';
@@ -18,14 +44,14 @@ export function build(): HTMLElement {
     'controls',
     button({ id: 'bTestament', act: 'testament', label: 'OLD TESTAMENT', sub: 'PRESS FOR NEW TESTAMENT' }),
     row(
-      button({ act: 'prevBook', glyph: '◀', sub: 'BOOK', say: 'Previous book.' }),
+      button({ id: 'bPrevBook', act: 'prevBook', glyph: '◀', sub: 'BOOK', say: 'Previous book.' }),
       button({ id: 'bBook', act: 'book', label: 'GENESIS' }),
-      button({ act: 'nextBook', glyph: '▶', sub: 'BOOK', say: 'Next book.' }),
+      button({ id: 'bNextBook', act: 'nextBook', glyph: '▶', sub: 'BOOK', say: 'Next book.' }),
     ),
     row(
-      button({ act: 'prevChap', glyph: '◀', sub: 'CHAP.', say: 'Previous chapter.' }),
+      button({ id: 'bPrevChap', act: 'prevChap', glyph: '◀', sub: 'CHAP.', say: 'Previous chapter.' }),
       button({ id: 'bChapter', act: 'chapter', label: 'CHAPTER 1', short: 'CHAP. 1' }),
-      button({ act: 'nextChap', glyph: '▶', sub: 'CHAP.', say: 'Next chapter.' }),
+      button({ id: 'bNextChap', act: 'nextChap', glyph: '▶', sub: 'CHAP.', say: 'Next chapter.' }),
     ),
     row(
       button({ act: 'prevVerse', glyph: '◀', sub: 'VERSE', say: 'Previous verse.' }),
@@ -62,6 +88,12 @@ export async function update(playing: boolean): Promise<void> {
   bp.dataset.say = playing ? 'Pause.' : 'Play.';
 
   $('#reader').classList.toggle('text-on', settings.showText);
+  const compact = settings.compactNav;
+  bb.hidden = compact;
+  bc.hidden = compact;
+  (bb.parentElement as HTMLElement).classList.toggle('compact', compact);
+  (bc.parentElement as HTMLElement).classList.toggle('compact', compact);
+  setArrows(compact);
   fitAll($('#reader'));
   await updatePanel();
 }

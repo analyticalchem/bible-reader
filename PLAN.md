@@ -275,6 +275,10 @@ Rules and behaviors:
 - **Verse arrows**: previous or next verse, crossing chapter boundaries.
   **Play/Pause**: filled button, label and glyph change with state.
 - **Settings**: full-width row at the very bottom, shorter than the others.
+- **Arrows-only view** (setting): the book and chapter name buttons are
+  hidden and the arrows widen to half a row each. Book arrows carry an
+  open-book icon and double chevrons; chapter arrows a page icon and a
+  single chevron. The lists stay reachable from the keyboard (B and C).
 - **Scripture panel**: shows the current chapter and keeps the line being
   read at the vertical center, gliding continuously as the voice moves
   through a verse and on to the next one (word positions from the voice
@@ -359,6 +363,7 @@ plus one or two buttons. Reading a row's name speaks "Hold time, currently
 | Voice | Any English voice the device offers, Previous / Next; each change speaks a sample verse in that voice | System default |
 | Reading speed | Slower / Faster, 0.7× to 1.3× | 1.0× |
 | Keep reading into the next chapter | On / Off | On |
+| Book and chapter names | Shown / Hidden. Hidden removes the two name buttons so the arrows fill the rows; the book arrows then show an open-book icon with double chevrons and the chapter arrows a page icon with single chevrons, so the two rows read differently without words | Shown |
 | Speak button names when pressed | On / Off | On |
 
 Up/Down arrows page through rows: five per page in landscape, three in

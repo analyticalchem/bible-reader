@@ -31,4 +31,6 @@ export interface Settings {
   rate: number;
   continueChapters: boolean;
   speakButtons: boolean;
+  /** Hide the book and chapter name buttons so the arrows can be wider. */
+  compactNav: boolean;
 }

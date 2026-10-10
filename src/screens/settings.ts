@@ -85,6 +85,11 @@ const ROWS: Row[] = [
     buttons: [{ act: 'continue', label: () => (settings.continueChapters ? 'TURN OFF' : 'TURN ON'), say: () => (settings.continueChapters ? 'Stop at the end of each chapter.' : 'Keep reading into the next chapter.') }],
   },
   {
+    name: 'Book and chapter names',
+    value: () => (settings.compactNav ? 'Hidden, wide arrows' : 'Shown'),
+    buttons: [{ act: 'compactNav', label: () => (settings.compactNav ? 'SHOW NAMES' : 'HIDE NAMES'), say: () => (settings.compactNav ? 'Show the book and chapter names.' : 'Hide the book and chapter names and widen the arrows.') }],
+  },
+  {
     name: 'Speak button names',
     value: () => onOff(settings.speakButtons),
     buttons: [{ act: 'speakButtons', label: () => (settings.speakButtons ? 'TURN OFF' : 'TURN ON'), say: () => (settings.speakButtons ? 'Stop speaking button names.' : 'Speak button names.') }],
