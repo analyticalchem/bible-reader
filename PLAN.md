@@ -69,9 +69,10 @@ Why this and not something else:
 | Font | Atkinson Hyperlegible (bundled) | Designed by the Braille Institute for low vision; free |
 | Hosting | GitHub Pages | Free at this size |
 
-Dev machine prerequisites (this Mac): Node.js is not installed yet
-(`brew install node`). `gh` is optional (`brew install gh`). Git, Python 3
-and Xcode are already present.
+Dev machine (this Mac): Node 26, npm, gh (signed in), git, Python 3 and
+Xcode are installed. The app's in-app preview launcher cannot read the
+Desktop folder, so local previews serve a copy of `dist/` from the session
+scratchpad (see the uncommitted `.claude/launch.json`).
 
 ---
 
@@ -489,6 +490,12 @@ bible-reader/
 ---
 
 ## 8. Hosting, install, updates
+
+Live since 2026-10-10: repository https://github.com/analyticalchem/bible-reader,
+app at https://analyticalchem.github.io/bible-reader/ (a project site in its
+own repository; the main analyticalchem.github.io site is untouched and does
+not link to it). Commits carry the GitHub username and no email address.
+
 
 1. Create the GitHub repo; push. A GitHub Actions workflow builds with Vite
    and deploys `dist/` to GitHub Pages. URL:
