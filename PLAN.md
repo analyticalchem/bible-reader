@@ -276,7 +276,10 @@ Rules and behaviors:
   **Play/Pause**: filled button, label and glyph change with state.
 - **Settings**: full-width row at the very bottom, shorter than the others.
 - **Scripture panel**: shows the current chapter, keeps the current verse
-  centered, and marks it with a thick ring in the theme's text color
+  centered (a verse taller than the panel starts near the top and the
+  panel scrolls to follow the voice through it, using word positions from
+  the voice when it reports them and timing otherwise), and marks it with
+  a thick ring in the theme's text color
   (a white ring on the white-on-black scheme). The colors inside the ring
   do not change. Reading a control's name on the panel speaks the current
   reference.
@@ -360,7 +363,9 @@ plus one or two buttons. Reading a row's name speaks "Hold time, currently
 | Keep reading into the next chapter | On / Off | On |
 | Speak button names when pressed | On / Off | On |
 
-Up/Down arrows page through rows if they do not all fit. The mockup shows
+Up/Down arrows page through rows: five per page in landscape, three in
+portrait, where each row's two buttons stack vertically so they stay
+readable on a phone. The chapter grid uses four columns in portrait. The mockup shows
 every spoken phrase as a caption at the top of the screen; that is a review
 aid, not a setting.
 
