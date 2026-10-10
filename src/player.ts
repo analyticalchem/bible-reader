@@ -3,7 +3,6 @@ import { position, savePosition, settings } from './state';
 import type { Position, Testament } from './types';
 import type { Speaker } from './speech/speaker';
 import type { VerseReader } from './reader/verse-reader';
-import { forSpeech } from './speech/pronounce';
 
 /** Play, pause and navigation. Every action announces itself through the one Speaker. */
 export class Player {
@@ -142,7 +141,7 @@ export class Player {
     await this.goTo(n, `${t === 'OT' ? 'Old Testament' : 'New Testament'}. ${bible.place(n)}.`);
   }
 
-  /** Verse steps: while paused, read that one verse and stop. */
+  /** Verse steps: announce the verse number; reading continues only if already playing. */
   private async goToVerse(n: Position): Promise<void> {
     const changed = n.chapter !== position.chapter || n.book !== position.book;
     const lead = changed ? `${bible.place(n)}. Verse ${n.verse}.` : `Verse ${n.verse}.`;
@@ -152,13 +151,7 @@ export class Player {
     this.onChange?.();
     const ok = await this.say(lead);
     if (op !== this.op || !ok) return;
-    if (this.playing) {
-      await this.startReading(op);
-      return;
-    }
-    const text = (await bible.chapter(n.book, n.chapter))[n.verse - 1] ?? '';
-    if (op !== this.op) return;
-    await this.speaker.speak(forSpeech(text), { ...this.opts(), onProgress: i => this.onProgress?.(n.verse, i) });
+    if (this.playing) await this.startReading(op);
   }
 
   private async startReading(op: number): Promise<void> {

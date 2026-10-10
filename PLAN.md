@@ -139,7 +139,7 @@ the current verse; Play reads that verse again from its beginning.
 
 | Action | While playing | While paused |
 |---|---|---|
-| Next/Prev Verse | Jumps, announces verse number, keeps reading | Reads that one verse, then stops |
+| Next/Prev Verse | Jumps, announces verse number, keeps reading | Announces the verse number only |
 | Next/Prev Chapter or Book, Testament button | Announces the new place, reads from verse 1 | Announces the new place only |
 | Choose Book/Chapter | Announces the new place, reads from verse 1 | Announces the new place only |
 | Read a control's name | Pauses, reads the name, resumes the current verse | Reads the name |
@@ -592,7 +592,8 @@ Confirmed in review on 2026-10-09:
 Made in this plan and not yet questioned:
 
 13. No framework; Vite + TypeScript; GitHub Pages hosting.
-14. While paused, Next/Prev Verse reads that single verse and stops.
+14. While paused, Next/Prev Verse only moves and announces the verse number;
+    nothing is read until Play is pressed.
 15. In landscape with Scripture shown, the panel sits beside the controls
     rather than above them, so the buttons stay tall.
 
