@@ -91,9 +91,10 @@ const ROWS: Row[] = [
   },
 ];
 
-export const PAGE = 5;
+/** Five rows per page in landscape; three in portrait, where each row stacks its two buttons. */
+export const perPage = (): number => (matchMedia('(max-aspect-ratio: 1/1)').matches ? 3 : 5);
 let page = 0;
-const pages = () => Math.ceil(ROWS.length / PAGE);
+const pages = () => Math.ceil(ROWS.length / perPage());
 const text = (v: string | (() => string)) => (typeof v === 'function' ? v() : v);
 
 export function build(): HTMLElement {
@@ -121,7 +122,9 @@ export function build(): HTMLElement {
 export function render(): void {
   const el = $('#srows');
   el.innerHTML = '';
-  const slice = ROWS.slice(page * PAGE, page * PAGE + PAGE);
+  const n = perPage();
+  page = Math.min(page, pages() - 1);
+  const slice = ROWS.slice(page * n, page * n + n);
   for (const r of slice) {
     const set = div('set', span('name', r.name), span('val', r.value()));
     set.dataset.say = `${r.name}. Currently ${r.value()}.`;
@@ -134,7 +137,7 @@ export function render(): void {
     }
     el.appendChild(row);
   }
-  for (let k = slice.length; k < PAGE; k++) {
+  for (let k = slice.length; k < n; k++) {
     const sp = spacer();
     sp.classList.add('srow');
     el.appendChild(sp);

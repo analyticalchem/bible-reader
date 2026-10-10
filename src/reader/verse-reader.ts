@@ -8,5 +8,7 @@ export interface VerseReader {
   play(verse: number): void;
   stop(): void;
   onVerseStart: ((verse: number) => void) | null;
+  /** Character offset within the verse that is being spoken, when the voice reports it. */
+  onVerseProgress: ((verse: number, charIndex: number) => void) | null;
   onChapterEnd: (() => void) | null;
 }

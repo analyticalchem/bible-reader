@@ -13,6 +13,15 @@ The design and decisions are in [PLAN.md](PLAN.md).
 
 Everything, including all 66 books, is stored on the Chromebook after the first visit, so the app works without internet.
 
+## Using it on an iPhone
+
+1. Open the app's address in Safari.
+2. Tap the Share button, then *Add to Home Screen*. It opens full screen like an app.
+3. After that first visit everything, including all 66 books, is stored on the phone, so it works without internet as long as the app stays on the home screen.
+4. Better voices: Settings › Accessibility › Spoken Content › Voices › English, download an Enhanced or Premium voice, then pick it in the app's Settings.
+
+Reading stops when the phone locks or you switch apps; that is a limit of web apps on iOS. Press and hold a button to hear its name.
+
 ## Controls
 
 - **Testament button** (top): switches between the Old and New Testament, starting at the first chapter.

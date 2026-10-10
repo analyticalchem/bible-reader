@@ -7,6 +7,7 @@ export class TtsReader implements VerseReader {
   private verses: string[] = [];
   private gen = 0;
   onVerseStart: ((verse: number) => void) | null = null;
+  onVerseProgress: ((verse: number, charIndex: number) => void) | null = null;
   onChapterEnd: (() => void) | null = null;
 
   constructor(private speaker: Speaker, private options: () => SpeakOptions) {}
@@ -28,10 +29,16 @@ export class TtsReader implements VerseReader {
   private async run(verse: number, gen: number): Promise<void> {
     let v = verse;
     while (gen === this.gen && v >= 1 && v <= this.verses.length) {
-      this.onVerseStart?.(v);
-      const ok = await this.speaker.speak(forSpeech(this.verses[v - 1]), this.options());
+      const current = v;
+      this.onVerseStart?.(current);
+      const ok = await this.speaker.speak(forSpeech(this.verses[current - 1]), {
+        ...this.options(),
+        onProgress: i => {
+          if (gen === this.gen) this.onVerseProgress?.(current, i);
+        },
+      });
       if (gen !== this.gen || !ok) return;
-      if (v === this.verses.length) {
+      if (current === this.verses.length) {
         this.onChapterEnd?.();
         return;
       }

@@ -67,12 +67,18 @@ export async function update(playing: boolean): Promise<void> {
 }
 
 let panelKey = '';
+let shownVerse = 0;
+
+function scrollBehavior(): ScrollBehavior {
+  return matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+}
 
 export async function updatePanel(): Promise<void> {
   const p = $('#panel');
   if (!settings.showText) {
     p.innerHTML = '';
     panelKey = '';
+    shownVerse = 0;
     return;
   }
   const key = `${position.book}-${position.chapter}`;
@@ -80,10 +86,10 @@ export async function updatePanel(): Promise<void> {
     const verses = await bible.chapter(position.book, position.chapter);
     if (key !== `${position.book}-${position.chapter}`) return; // moved on while loading
     panelKey = key;
+    shownVerse = 0;
     p.innerHTML = '';
     verses.forEach((text, i) => {
-      const d = div('v', span('n', String(i + 1)), text);
-      p.appendChild(d);
+      p.appendChild(div('v', span('n', String(i + 1)), text));
     });
   }
   let cur: HTMLElement | null = null;
@@ -97,9 +103,66 @@ export async function updatePanel(): Promise<void> {
       d.removeAttribute('aria-current');
     }
   });
-  if (cur) {
+  if (cur && shownVerse !== position.verse) {
+    shownVerse = position.verse;
+    stopFollowing();
     const c = cur as HTMLElement;
-    p.scrollTop = c.offsetTop - p.clientHeight / 2 + c.offsetHeight / 2;
+    // A verse that fits is centered; a verse taller than the panel starts near the top and is followed as it is read.
+    const top = c.offsetHeight > p.clientHeight * 0.8 ? c.offsetTop - p.clientHeight * 0.08 : c.offsetTop - p.clientHeight / 2 + c.offsetHeight / 2;
+    p.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
   }
   p.dataset.say = `${bible.reference(position)}.`;
+}
+
+/* ---- following the voice through a long verse ----
+   The voice reports word positions when it can (onboundary). Between reports, and on voices that
+   never report, the position is estimated from elapsed time so the panel still keeps up. */
+const CHARS_PER_SECOND = 14; // ordinary reading pace at normal speed
+let followVerse = 0;
+let followIndex = 0;
+let followAt = 0;
+let followTimer = 0;
+
+export function progress(verse: number, charIndex: number): void {
+  if (!settings.showText || verse !== position.verse) return;
+  followVerse = verse;
+  followIndex = charIndex;
+  followAt = performance.now();
+  scrollToChar(verse, charIndex);
+  if (!followTimer) followTimer = window.setInterval(tick, 300);
+}
+
+export function stopFollowing(): void {
+  if (followTimer) clearInterval(followTimer);
+  followTimer = 0;
+  followVerse = 0;
+}
+
+function tick(): void {
+  if (!followVerse || followVerse !== position.verse) return stopFollowing();
+  const elapsed = (performance.now() - followAt) / 1000;
+  scrollToChar(followVerse, followIndex + elapsed * CHARS_PER_SECOND * settings.rate);
+}
+
+function scrollToChar(verse: number, charIndex: number): void {
+  const p = $('#panel');
+  const el = p.children[verse - 1] as HTMLElement | undefined;
+  if (!el) return;
+  const node = el.lastChild;
+  if (!node || node.nodeType !== Node.TEXT_NODE) return;
+  const len = node.textContent?.length ?? 0;
+  if (len === 0 || el.offsetHeight <= p.clientHeight * 0.8) return; // short verses stay centered
+  const i = Math.max(0, Math.min(len - 1, Math.round(charIndex)));
+  const range = document.createRange();
+  range.setStart(node, i);
+  range.setEnd(node, Math.min(len, i + 1));
+  const rect = range.getBoundingClientRect();
+  if (!rect.height) return;
+  const panelRect = p.getBoundingClientRect();
+  const y = rect.top - panelRect.top; // position inside the visible panel
+  const h = p.clientHeight;
+  // Keep the spoken line in the middle band; scroll when it drifts toward the bottom or above the top.
+  if (y + rect.height > h * 0.7 || y < h * 0.05) {
+    p.scrollTo({ top: p.scrollTop + y - h * 0.35, behavior: scrollBehavior() });
+  }
 }

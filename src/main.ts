@@ -56,9 +56,11 @@ function show(id: string): void {
 }
 
 function refresh(): void {
+  if (!player.playing) reader.stopFollowing();
   void reader.update(player.playing);
 }
 player.onChange = refresh;
+player.onProgress = (verse, charIndex) => reader.progress(verse, charIndex);
 
 function say(text: string): void {
   player.announce(text);
@@ -209,6 +211,7 @@ async function boot(): Promise<void> {
     if (screen === 'settings') settingsScreen.render();
   });
   window.addEventListener('resize', () => {
+    if (screen === 'settings') settingsScreen.render();
     fitAll();
     void reader.updatePanel();
   });

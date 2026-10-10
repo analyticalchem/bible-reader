@@ -4,6 +4,8 @@ import * as voices from './voices';
 export interface SpeakOptions {
   rate?: number;
   voice?: string;
+  /** Called with the character offset (in the full text) as speech moves through it. */
+  onProgress?: (charIndex: number) => void;
 }
 
 /**
@@ -32,6 +34,7 @@ export class Speaker {
     const gen = ++this.gen;
     this.onSpeak?.(text);
     if (!this.working) {
+      opts.onProgress?.(0);
       await wait(estimate(text));
       return gen === this.gen;
     }
@@ -40,9 +43,14 @@ export class Speaker {
     } catch {
       /* ignore */
     }
+    let from = 0;
     for (const piece of chunk(text)) {
       if (gen !== this.gen) return false;
-      const done = await this.utter(piece, opts, gen);
+      const found = text.indexOf(piece, from);
+      const offset = found < 0 ? from : found;
+      from = offset + piece.length;
+      opts.onProgress?.(offset);
+      const done = await this.utter(piece, opts, gen, offset);
       if (!done) return false;
     }
     return gen === this.gen;
@@ -58,7 +66,7 @@ export class Speaker {
     }
   }
 
-  private utter(text: string, opts: SpeakOptions, gen: number): Promise<boolean> {
+  private utter(text: string, opts: SpeakOptions, gen: number, offset: number): Promise<boolean> {
     return new Promise(resolve => {
       const u = new SpeechSynthesisUtterance(text);
       const v = voices.find(opts.voice ?? '');
@@ -79,6 +87,10 @@ export class Speaker {
       };
       u.onstart = () => {
         started = true;
+      };
+      u.onboundary = e => {
+        // Word boundaries arrive from most local voices; they let the Scripture panel follow the reading.
+        if (gen === this.gen && e.charIndex >= 0 && e.name !== 'sentence') opts.onProgress?.(offset + e.charIndex);
       };
       u.onend = () => finish(true);
       u.onerror = e => {

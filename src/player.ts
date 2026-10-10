@@ -10,6 +10,8 @@ export class Player {
   playing = false;
   private op = 0;
   onChange: (() => void) | null = null;
+  /** Where in the current verse the voice is, so the Scripture panel can follow along. */
+  onProgress: ((verse: number, charIndex: number) => void) | null = null;
 
   constructor(private speaker: Speaker, private reader: VerseReader) {
     reader.onVerseStart = v => {
@@ -17,6 +19,7 @@ export class Player {
       savePosition();
       this.onChange?.();
     };
+    reader.onVerseProgress = (v, i) => this.onProgress?.(v, i);
     reader.onChapterEnd = () => void this.chapterEnded();
   }
 
@@ -155,7 +158,7 @@ export class Player {
     }
     const text = (await bible.chapter(n.book, n.chapter))[n.verse - 1] ?? '';
     if (op !== this.op) return;
-    await this.say(forSpeech(text));
+    await this.speaker.speak(forSpeech(text), { ...this.opts(), onProgress: i => this.onProgress?.(n.verse, i) });
   }
 
   private async startReading(op: number): Promise<void> {
