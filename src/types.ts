@@ -33,4 +33,6 @@ export interface Settings {
   speakButtons: boolean;
   /** Hide the book and chapter name buttons so the arrows can be wider. */
   compactNav: boolean;
+  /** Show the previous/next verse arrows beside Play. */
+  showVerseArrows: boolean;
 }

@@ -54,9 +54,9 @@ export function build(): HTMLElement {
       button({ id: 'bNextChap', act: 'nextChap', glyph: '▶', sub: 'CHAP.', say: 'Next chapter.' }),
     ),
     row(
-      button({ act: 'prevVerse', glyph: '◀', sub: 'VERSE', say: 'Previous verse.' }),
+      button({ id: 'bPrevVerse', act: 'prevVerse', glyph: '◀', sub: 'VERSE', say: 'Previous verse.' }),
       button({ id: 'bPlay', act: 'play', glyph: '▶', sub: 'PLAY', say: 'Play.', cls: 'filled' }),
-      button({ act: 'nextVerse', glyph: '▶', sub: 'VERSE', say: 'Next verse.' }),
+      button({ id: 'bNextVerse', act: 'nextVerse', glyph: '▶', sub: 'VERSE', say: 'Next verse.' }),
     ),
     button({ id: 'bSettings', act: 'settings', label: 'SETTINGS', say: 'Settings.' }),
   );
@@ -94,6 +94,10 @@ export async function update(playing: boolean): Promise<void> {
   (bb.parentElement as HTMLElement).classList.toggle('compact', compact);
   (bc.parentElement as HTMLElement).classList.toggle('compact', compact);
   setArrows(compact);
+  const arrows = settings.showVerseArrows;
+  $('#bPrevVerse').hidden = !arrows;
+  $('#bNextVerse').hidden = !arrows;
+  (bp.parentElement as HTMLElement).classList.toggle('solo', !arrows);
   fitAll($('#reader'));
   await updatePanel();
 }

@@ -45,6 +45,7 @@ const DEFAULT_SETTINGS: Settings = {
   continueChapters: true,
   speakButtons: true,
   compactNav: false,
+  showVerseArrows: true,
 };
 
 const DEFAULT_POSITION: Position = { book: 'GEN', chapter: 1, verse: 1 };

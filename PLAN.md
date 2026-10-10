@@ -364,6 +364,7 @@ plus one or two buttons. Reading a row's name speaks "Hold time, currently
 | Reading speed | Slower / Faster, 0.7× to 1.3× | 1.0× |
 | Keep reading into the next chapter | On / Off | On |
 | Book and chapter names | Shown / Hidden. Hidden removes the two name buttons so the arrows fill the rows; the book arrows then show an open-book icon with double chevrons and the chapter arrows a page icon with single chevrons, so the two rows read differently without words | Shown |
+| Verse arrows | Shown / Hidden. Hidden removes the previous/next verse arrows and Play fills the row; the keyboard arrows still step verses | Shown |
 | Speak button names when pressed | On / Off | On |
 
 Up/Down arrows page through rows: five per page in landscape, three in

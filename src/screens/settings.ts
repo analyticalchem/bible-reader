@@ -90,6 +90,11 @@ const ROWS: Row[] = [
     buttons: [{ act: 'compactNav', label: () => (settings.compactNav ? 'SHOW NAMES' : 'HIDE NAMES'), say: () => (settings.compactNav ? 'Show the book and chapter names.' : 'Hide the book and chapter names and widen the arrows.') }],
   },
   {
+    name: 'Verse arrows',
+    value: () => (settings.showVerseArrows ? 'Shown' : 'Hidden'),
+    buttons: [{ act: 'verseArrows', label: () => (settings.showVerseArrows ? 'HIDE ARROWS' : 'SHOW ARROWS'), say: () => (settings.showVerseArrows ? 'Hide the verse arrows.' : 'Show the verse arrows.') }],
+  },
+  {
     name: 'Speak button names',
     value: () => onOff(settings.speakButtons),
     buttons: [{ act: 'speakButtons', label: () => (settings.speakButtons ? 'TURN OFF' : 'TURN ON'), say: () => (settings.speakButtons ? 'Stop speaking button names.' : 'Speak button names.') }],

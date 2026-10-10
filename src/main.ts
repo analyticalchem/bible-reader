@@ -164,6 +164,7 @@ function activate(el: HTMLElement): void {
     case 'rateFaster': settings.rate = RATES[step(rateIndex(), RATES.length - 1, 1)].rate; changed(`Reading speed ${RATES[rateIndex()].name}.`); break;
     case 'continue': settings.continueChapters = !settings.continueChapters; changed(settings.continueChapters ? 'Reading will continue into the next chapter.' : 'Reading will stop at the end of each chapter.'); break;
     case 'compactNav': settings.compactNav = !settings.compactNav; changed(settings.compactNav ? 'Book and chapter names hidden. The arrows are wider. Press B or C on the keyboard for the lists.' : 'Book and chapter names shown.'); break;
+    case 'verseArrows': settings.showVerseArrows = !settings.showVerseArrows; changed(settings.showVerseArrows ? 'Verse arrows shown.' : 'Verse arrows hidden. The play button fills the row. The left and right keys still step verses.'); break;
     case 'speakButtons': settings.speakButtons = !settings.speakButtons; changed(settings.speakButtons ? 'Button names will be spoken.' : 'Button names will not be spoken.'); break;
     default: break;
   }
