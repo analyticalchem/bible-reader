@@ -213,12 +213,12 @@ async function boot(): Promise<void> {
   window.addEventListener('resize', () => {
     if (screen === 'settings') settingsScreen.render();
     fitAll();
-    void reader.updatePanel();
+    reader.recenter();
   });
   if (document.fonts?.ready) {
     void document.fonts.ready.then(() => {
       fitAll();
-      void reader.updatePanel();
+      reader.recenter();
     });
   }
 }

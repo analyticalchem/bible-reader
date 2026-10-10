@@ -69,12 +69,66 @@ export async function update(playing: boolean): Promise<void> {
 let panelKey = '';
 let shownVerse = 0;
 
-function scrollBehavior(): ScrollBehavior {
-  return matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+const panel = (): HTMLElement => $('#panel');
+const reducedMotion = (): boolean => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---- smooth scrolling ----
+   Every scroll request sets a target; one animation loop eases the panel toward it, so
+   frequent requests (word by word) produce one continuous motion instead of jumps. */
+let target = -1;
+let raf = 0;
+
+function setTarget(top: number, instant = false): void {
+  const p = panel();
+  const max = Math.max(0, p.scrollHeight - p.clientHeight);
+  target = Math.max(0, Math.min(max, top));
+  if (instant || reducedMotion()) {
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+    p.scrollTop = target;
+    return;
+  }
+  if (!raf) raf = requestAnimationFrame(stepScroll);
+}
+
+function stepScroll(): void {
+  raf = 0;
+  const p = panel();
+  const d = target - p.scrollTop;
+  if (Math.abs(d) < 0.5) {
+    p.scrollTop = target;
+    return;
+  }
+  p.scrollTop += d * 0.12;
+  raf = requestAnimationFrame(stepScroll);
+}
+
+/** Offset (inside the panel's content) and height of the line holding character i of a verse. */
+function lineAt(el: HTMLElement, i: number): { y: number; h: number } | null {
+  const node = el.lastChild;
+  if (!node || node.nodeType !== Node.TEXT_NODE) return null;
+  const len = node.textContent?.length ?? 0;
+  if (!len) return null;
+  const k = Math.max(0, Math.min(len - 1, Math.round(i)));
+  const range = document.createRange();
+  range.setStart(node, k);
+  range.setEnd(node, k + 1);
+  const rect = range.getBoundingClientRect();
+  if (!rect.height) return null;
+  const p = panel();
+  return { y: rect.top - p.getBoundingClientRect().top + p.scrollTop, h: rect.height };
+}
+
+/** Puts the line holding character i of a verse at the vertical center of the panel. */
+function centerLine(el: HTMLElement, i: number, instant = false): void {
+  const p = panel();
+  const line = lineAt(el, i);
+  const middle = line ? line.y + line.h / 2 : el.offsetTop + el.offsetHeight / 2;
+  setTarget(middle - p.clientHeight / 2, instant);
 }
 
 export async function updatePanel(): Promise<void> {
-  const p = $('#panel');
+  const p = panel();
   if (!settings.showText) {
     p.innerHTML = '';
     panelKey = '';
@@ -82,11 +136,13 @@ export async function updatePanel(): Promise<void> {
     return;
   }
   const key = `${position.book}-${position.chapter}`;
+  let fresh = false;
   if (key !== panelKey) {
     const verses = await bible.chapter(position.book, position.chapter);
     if (key !== `${position.book}-${position.chapter}`) return; // moved on while loading
     panelKey = key;
     shownVerse = 0;
+    fresh = true;
     p.innerHTML = '';
     verses.forEach((text, i) => {
       p.appendChild(div('v', span('n', String(i + 1)), text));
@@ -106,15 +162,20 @@ export async function updatePanel(): Promise<void> {
   if (cur && shownVerse !== position.verse) {
     shownVerse = position.verse;
     stopFollowing();
-    const c = cur as HTMLElement;
-    // A verse that fits is centered; a verse taller than the panel starts near the top and is followed as it is read.
-    const top = c.offsetHeight > p.clientHeight * 0.8 ? c.offsetTop - p.clientHeight * 0.08 : c.offsetTop - p.clientHeight / 2 + c.offsetHeight / 2;
-    p.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
+    // A new chapter appears already in place; within a chapter the panel glides to the next verse.
+    centerLine(cur, 0, fresh);
   }
   p.dataset.say = `${bible.reference(position)}.`;
 }
 
-/* ---- following the voice through a long verse ----
+/** After a resize, put the current verse back in the middle. */
+export function recenter(): void {
+  const p = panel();
+  const cur = p.children[position.verse - 1] as HTMLElement | undefined;
+  if (cur) centerLine(cur, followVerse === position.verse ? followIndex : 0, true);
+}
+
+/* ---- following the voice ----
    The voice reports word positions when it can (onboundary). Between reports, and on voices that
    never report, the position is estimated from elapsed time so the panel still keeps up. */
 const CHARS_PER_SECOND = 14; // ordinary reading pace at normal speed
@@ -128,8 +189,9 @@ export function progress(verse: number, charIndex: number): void {
   followVerse = verse;
   followIndex = charIndex;
   followAt = performance.now();
-  scrollToChar(verse, charIndex);
-  if (!followTimer) followTimer = window.setInterval(tick, 300);
+  const el = panel().children[verse - 1] as HTMLElement | undefined;
+  if (el) centerLine(el, charIndex);
+  if (!followTimer) followTimer = window.setInterval(tick, 250);
 }
 
 export function stopFollowing(): void {
@@ -140,29 +202,8 @@ export function stopFollowing(): void {
 
 function tick(): void {
   if (!followVerse || followVerse !== position.verse) return stopFollowing();
+  const el = panel().children[followVerse - 1] as HTMLElement | undefined;
+  if (!el) return stopFollowing();
   const elapsed = (performance.now() - followAt) / 1000;
-  scrollToChar(followVerse, followIndex + elapsed * CHARS_PER_SECOND * settings.rate);
-}
-
-function scrollToChar(verse: number, charIndex: number): void {
-  const p = $('#panel');
-  const el = p.children[verse - 1] as HTMLElement | undefined;
-  if (!el) return;
-  const node = el.lastChild;
-  if (!node || node.nodeType !== Node.TEXT_NODE) return;
-  const len = node.textContent?.length ?? 0;
-  if (len === 0 || el.offsetHeight <= p.clientHeight * 0.8) return; // short verses stay centered
-  const i = Math.max(0, Math.min(len - 1, Math.round(charIndex)));
-  const range = document.createRange();
-  range.setStart(node, i);
-  range.setEnd(node, Math.min(len, i + 1));
-  const rect = range.getBoundingClientRect();
-  if (!rect.height) return;
-  const panelRect = p.getBoundingClientRect();
-  const y = rect.top - panelRect.top; // position inside the visible panel
-  const h = p.clientHeight;
-  // Keep the spoken line in the middle band; scroll when it drifts toward the bottom or above the top.
-  if (y + rect.height > h * 0.7 || y < h * 0.05) {
-    p.scrollTo({ top: p.scrollTop + y - h * 0.35, behavior: scrollBehavior() });
-  }
+  centerLine(el, followIndex + elapsed * CHARS_PER_SECOND * settings.rate);
 }

@@ -275,14 +275,12 @@ Rules and behaviors:
 - **Verse arrows**: previous or next verse, crossing chapter boundaries.
   **Play/Pause**: filled button, label and glyph change with state.
 - **Settings**: full-width row at the very bottom, shorter than the others.
-- **Scripture panel**: shows the current chapter, keeps the current verse
-  centered (a verse taller than the panel starts near the top and the
-  panel scrolls to follow the voice through it, using word positions from
-  the voice when it reports them and timing otherwise), and marks it with
-  a thick ring in the theme's text color
-  (a white ring on the white-on-black scheme). The colors inside the ring
-  do not change. Reading a control's name on the panel speaks the current
-  reference.
+- **Scripture panel**: shows the current chapter and keeps the line being
+  read at the vertical center, gliding continuously as the voice moves
+  through a verse and on to the next one (word positions from the voice
+  when it reports them, timing otherwise). No ring or highlight marks the
+  verse; its position is the marker. Reading a control's name on the panel
+  speaks the current reference.
 - Rows that are adjacent and similar (book arrows above chapter arrows) are
   separated by the row gap and distinguished by the small caption under
   each arrow glyph ("BOOK", "CHAP.", "VERSE").
@@ -575,8 +573,8 @@ Confirmed in review on 2026-10-09:
    names abbreviate instead of wrapping (section 5.1).
 7. The testament button switches to the other testament's first chapter.
 8. Choosing a book returns to the reader at chapter 1.
-9. The current verse is marked by a ring in the theme's text color; the
-   colors inside do not invert.
+9. The verse being read is not highlighted; the panel keeps the line being
+   read centered instead (the ring was tried and removed).
 10. Buttons can activate by click or by hold, with an adjustable hold time.
     Spoken names are statuses, never instructions.
 11. The verse panel is called "Scripture" in settings (Show Scripture,
