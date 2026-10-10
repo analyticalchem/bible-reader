@@ -1,0 +1,80 @@
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
+  padding: calc(12px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+#app { height: 100%; }
+
+/* ---- screens ---- */
+.screen { height: 100%; display: grid; gap: var(--gap); min-height: 0; }
+.screen[hidden] { display: none; }
+#reader { grid-template-columns: minmax(0, 1fr); }
+#reader .panel { display: none; }
+#reader.text-on { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+#reader.text-on .panel { display: block; }
+@media (max-aspect-ratio: 1/1) {
+  #reader.text-on { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 34fr) minmax(0, 66fr); }
+}
+.controls { display: grid; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 0.6fr); gap: var(--gap); min-height: 0; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.6fr) minmax(0, 1fr); gap: var(--gap); min-height: 0; }
+
+/* ---- buttons ---- */
+.btn {
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.05em;
+  min-width: 0; min-height: 0; margin: 0; padding: 0 0.35em;
+  font: 700 var(--label) / 1.05 var(--font); text-transform: uppercase; letter-spacing: 0.02em;
+  color: var(--fg); background: var(--bg); border: var(--border) solid var(--fg); border-radius: var(--radius);
+  cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.btn:focus-visible { outline: var(--border) solid var(--hi); outline-offset: 3px; }
+.btn.filled { background: var(--fg); color: var(--bg); }
+.btn.pressed { background: var(--fg); color: var(--bg); }
+.btn.filled.pressed { background: var(--bg); color: var(--fg); }
+.btn.describing { outline: var(--border) solid var(--hi); outline-offset: 3px; }
+.btn .lbl { display: block; width: 100%; min-width: 0; max-width: 100%; overflow: hidden; text-align: center; }
+.btn .lbl.nowrap { white-space: nowrap; }
+.btn .glyph { font-size: 1.5em; line-height: 1; }
+.btn .sub { font-size: 0.5em; letter-spacing: 0.1em; }
+.btn .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--hi); opacity: 0.5; pointer-events: none; transition: none; }
+.btn.holding .fill { width: 100%; transition: width var(--hold-ms, 1000ms) linear; }
+.btn.spacer { visibility: hidden; }
+
+/* ---- Scripture panel ---- */
+.panel { position: relative; min-height: 0; overflow: auto; border: var(--border) solid var(--fg); border-radius: var(--radius); padding: 0.4em 0.5em; font-size: var(--text); line-height: 1.35; }
+.v { padding: 0.12em 0.3em; border: var(--border) solid transparent; border-radius: 0.35em; margin: 0.1em 0; }
+.v .n { font-weight: 700; font-size: 0.7em; margin-right: 0.35em; opacity: 0.85; }
+.v.cur { border-color: var(--fg); }
+
+/* ---- lists ---- */
+#books { grid-template-rows: minmax(0, 1fr) minmax(0, 5fr) minmax(0, 0.6fr); }
+.listwrap { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 1fr); gap: var(--gap); min-height: 0; }
+.list { display: grid; grid-template-rows: repeat(6, minmax(0, 1fr)); gap: var(--gap); min-height: 0; }
+.arrows { display: grid; grid-template-rows: repeat(2, minmax(0, 1fr)); gap: var(--gap); min-height: 0; }
+#chapters { grid-template-rows: minmax(0, 0.55fr) minmax(0, 5fr) minmax(0, 0.6fr); }
+.heading { display: flex; align-items: center; justify-content: center; min-width: 0; text-align: center; font: 700 calc(var(--label) * 0.75) / 1.1 var(--font); text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg); }
+.grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); gap: var(--gap); min-height: 0; }
+.grid .btn { font-size: calc(var(--label) * 1.25); font-variant-numeric: tabular-nums; }
+
+/* ---- settings ---- */
+#settings { grid-template-rows: minmax(0, 5fr) minmax(0, 0.6fr); }
+.srows { display: grid; grid-template-rows: repeat(5, minmax(0, 1fr)); gap: var(--gap); min-height: 0; }
+.srow { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr) minmax(0, 1fr); gap: var(--gap); min-height: 0; }
+.set { display: flex; flex-direction: column; justify-content: center; min-width: 0; padding: 0 0.5em; border: var(--border) dashed var(--dim); border-radius: var(--radius); font: 700 calc(var(--label) * 0.7) / 1.1 var(--font); text-transform: uppercase; letter-spacing: 0.04em; overflow: hidden; }
+.set .name { opacity: 0.85; font-size: 0.8em; }
+.set .val { font-size: 1.1em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.srow .btn { font-size: calc(var(--label) * 0.8); }
+.srow .btn.span2 { grid-column: 2 / span 2; }
+
+/* ---- optional caption of what is being spoken (add ?captions to the address) ---- */
+#caption { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 8px); left: 50%; transform: translateX(-50%); max-width: min(92vw, 900px); padding: 0.35em 0.8em; border-radius: 999px; background: var(--fg); color: var(--bg); font: 700 clamp(13px, 2.2vh, 20px) / 1.2 var(--font); opacity: 0; transition: opacity 0.25s; pointer-events: none; z-index: 9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#caption.show { opacity: 0.93; }
+@media (prefers-reduced-motion: reduce) { #caption { transition: none; } }

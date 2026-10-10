@@ -1,0 +1,101 @@
+<title>Bible Reader Icon</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one row per icon variant; each row shows the icon at launcher, shelf, tab and favicon sizes,
+   then on a dark and a light shelf strip. Dark-first, matching the app's default scheme. */
+:root {
+  --bg: #121212; --fg: #f2f2f2; --muted: #a8a8a8; --rule: #2e2e2e; --shelf-dark: #202124; --shelf-light: #e8eaed;
+  --font: "Atkinson Hyperlegible", system-ui, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) { --bg: #fafafa; --fg: #141414; --muted: #5c5c5c; --rule: #d9d9d9; color-scheme: light; }
+}
+:root[data-theme="light"] { --bg: #fafafa; --fg: #141414; --muted: #5c5c5c; --rule: #d9d9d9; color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); padding-inline: 20px; padding-block: 28px; line-height: 1.45; }
+main { max-width: 980px; margin: 0 auto; display: grid; gap: 28px; }
+h1 { font-size: 1.6rem; margin: 0; text-wrap: balance; }
+p { margin: 0; max-width: 62ch; color: var(--muted); }
+.variant { display: grid; gap: 14px; padding-block: 22px; border-top: 1px solid var(--rule); }
+.variant h2 { font-size: 1.1rem; margin: 0; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.tag { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 700; }
+.sizes { display: flex; align-items: flex-end; gap: 28px; flex-wrap: wrap; }
+.size { display: grid; justify-items: center; gap: 8px; font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.shelves { display: flex; gap: 16px; flex-wrap: wrap; }
+.shelf { display: flex; align-items: center; gap: 18px; height: 72px; padding-inline: 18px; border-radius: 12px; min-width: 0; flex: 1 1 280px; }
+.shelf.dark { background: var(--shelf-dark); }
+.shelf.light { background: var(--shelf-light); }
+.shelf .dot { width: 44px; height: 44px; border-radius: 10px; opacity: 0.25; background: #888; }
+svg.icon { display: block; max-width: 100%; }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="book-base">
+      <circle cx="256" cy="256" r="256" fill="#000"/>
+      <path fill="#fff" d="M60 150C120 110 200 115 256 165C312 115 392 110 452 150L452 392C392 358 312 362 256 412C200 362 120 358 60 392Z"/>
+      <path stroke="#000" stroke-width="12" stroke-linecap="round" d="M256 168V410"/>
+    </g>
+    <path id="lines-left" stroke="#000" stroke-width="14" stroke-linecap="round" d="M98 210H212M98 257H212M98 304H212M98 351H212"/>
+    <path id="lines-right" stroke="#000" stroke-width="14" stroke-linecap="round" d="M300 210H414M300 257H414M300 304H414M300 351H414"/>
+    <symbol id="book-lines" viewBox="0 0 512 512"><use href="#book-base"/><use href="#lines-left"/><use href="#lines-right"/></symbol>
+    <symbol id="book-cross" viewBox="0 0 512 512"><use href="#book-base"/><path stroke="#000" stroke-width="18" stroke-linecap="round" d="M155 200V352M114 250H196"/><use href="#lines-right"/></symbol>
+    <symbol id="book-waves" viewBox="0 0 512 512"><use href="#book-base"/><use href="#lines-left"/><path fill="none" stroke="#000" stroke-width="14" stroke-linecap="round" d="M318 250a40 40 0 0 1 0 72M346 222a76 76 0 0 1 0 128M374 194a112 112 0 0 1 0 184"/><circle cx="304" cy="286" r="12" fill="#000"/></symbol>
+  </defs>
+</svg>
+
+<main>
+  <header>
+    <h1>Bible Reader icon</h1>
+    <p>Three open-book variants, white on a black circle so the icon matches the app's default scheme. ChromeOS shows app icons as circles in the launcher and on the shelf, so each is drawn inside the circle's safe zone. Sizes below are the ones the Chromebook actually uses.</p>
+  </header>
+
+  <section class="variant">
+    <h2>Open book with page lines</h2>
+    <p>Simplest silhouette, so it stays readable at the smallest shelf size and from across the room.</p>
+    <div class="sizes">
+      <div class="size"><svg class="icon" width="128" height="128"><use href="#book-lines"/></svg>Launcher 128</div>
+      <div class="size"><svg class="icon" width="64" height="64"><use href="#book-lines"/></svg>Shelf 64</div>
+      <div class="size"><svg class="icon" width="48" height="48"><use href="#book-lines"/></svg>Shelf 48</div>
+      <div class="size"><svg class="icon" width="32" height="32"><use href="#book-lines"/></svg>Tab 32</div>
+      <div class="size"><svg class="icon" width="16" height="16"><use href="#book-lines"/></svg>Favicon 16</div>
+    </div>
+    <div class="shelves">
+      <div class="shelf dark"><span class="dot"></span><svg class="icon" width="48" height="48"><use href="#book-lines"/></svg><span class="dot"></span></div>
+      <div class="shelf light"><span class="dot"></span><svg class="icon" width="48" height="48"><use href="#book-lines"/></svg><span class="dot"></span></div>
+    </div>
+  </section>
+
+  <section class="variant">
+    <h2>Open book with a cross <span class="tag">chosen</span></h2>
+    <p>Says "Bible" rather than "book" at a glance. The cross stays legible down to shelf size; at favicon size it reads as a mark on the page.</p>
+    <div class="sizes">
+      <div class="size"><svg class="icon" width="128" height="128"><use href="#book-cross"/></svg>Launcher 128</div>
+      <div class="size"><svg class="icon" width="64" height="64"><use href="#book-cross"/></svg>Shelf 64</div>
+      <div class="size"><svg class="icon" width="48" height="48"><use href="#book-cross"/></svg>Shelf 48</div>
+      <div class="size"><svg class="icon" width="32" height="32"><use href="#book-cross"/></svg>Tab 32</div>
+      <div class="size"><svg class="icon" width="16" height="16"><use href="#book-cross"/></svg>Favicon 16</div>
+    </div>
+    <div class="shelves">
+      <div class="shelf dark"><span class="dot"></span><svg class="icon" width="48" height="48"><use href="#book-cross"/></svg><span class="dot"></span></div>
+      <div class="shelf light"><span class="dot"></span><svg class="icon" width="48" height="48"><use href="#book-cross"/></svg><span class="dot"></span></div>
+    </div>
+  </section>
+
+  <section class="variant">
+    <h2>Open book with sound waves</h2>
+    <p>Hints that the app reads aloud. The waves are the busiest of the three and soften at small sizes.</p>
+    <div class="sizes">
+      <div class="size"><svg class="icon" width="128" height="128"><use href="#book-waves"/></svg>Launcher 128</div>
+      <div class="size"><svg class="icon" width="64" height="64"><use href="#book-waves"/></svg>Shelf 64</div>
+      <div class="size"><svg class="icon" width="48" height="48"><use href="#book-waves"/></svg>Shelf 48</div>
+      <div class="size"><svg class="icon" width="32" height="32"><use href="#book-waves"/></svg>Tab 32</div>
+      <div class="size"><svg class="icon" width="16" height="16"><use href="#book-waves"/></svg>Favicon 16</div>
+    </div>
+    <div class="shelves">
+      <div class="shelf dark"><span class="dot"></span><svg class="icon" width="48" height="48"><use href="#book-waves"/></svg><span class="dot"></span></div>
+      <div class="shelf light"><span class="dot"></span><svg class="icon" width="48" height="48"><use href="#book-waves"/></svg><span class="dot"></span></div>
+    </div>
+  </section>
+</main>

@@ -1,0 +1,19 @@
+/* Every color comes from these tokens. The app's own four schemes replace the
+   usual light/dark pair; the person picks one in Settings. */
+:root {
+  --bg: #000000;
+  --fg: #ffffff;
+  --hi: #ffd400;
+  --dim: #9a9a9a;
+  --font: 'Atkinson Hyperlegible', system-ui, 'Helvetica Neue', Arial, sans-serif;
+  --label-scale: 1;
+  --label: calc(clamp(16px, min(4.4vh, 6vw), 46px) * var(--label-scale));
+  --border: clamp(3px, 0.8vh, 8px);
+  --gap: clamp(8px, 1.4vh, 14px);
+  --radius: 16px;
+  --text: 7vh;
+  color-scheme: dark;
+}
+:root[data-scheme='yb'] { --bg: #000000; --fg: #ffe600; --hi: #ffffff; --dim: #a39a3a; color-scheme: dark; }
+:root[data-scheme='bw'] { --bg: #ffffff; --fg: #000000; --hi: #0040ff; --dim: #555555; color-scheme: light; }
+:root[data-scheme='by'] { --bg: #fff2a8; --fg: #000000; --hi: #0040ff; --dim: #5a5230; color-scheme: light; }

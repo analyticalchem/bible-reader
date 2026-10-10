@@ -1,0 +1,530 @@
+<title>Bible Reader Mockup</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: a one-screen app. Reader = optional Scripture panel beside a five-row control stack
+   (testament / book / chapter / play with verse arrows / settings). Pickers = big button on top,
+   list in the middle, Back at the bottom. The app's own four color schemes drive every color. */
+:root {
+  --bg: #000000; --fg: #ffffff; --hi: #ffd400; --dim: #9a9a9a;
+  --font: "Atkinson Hyperlegible", system-ui, "Helvetica Neue", Arial, sans-serif;
+  --label-scale: 1;
+  --label: calc(clamp(16px, min(4.4vh, 6vw), 46px) * var(--label-scale));
+  --border: clamp(3px, 0.8vh, 8px);
+  --gap: clamp(8px, 1.4vh, 14px);
+  --radius: 16px;
+  --text: 7vh;
+  color-scheme: dark;
+}
+:root[data-scheme="yb"] { --bg: #000000; --fg: #ffe600; --hi: #ffffff; --dim: #a39a3a; color-scheme: dark; }
+:root[data-scheme="bw"] { --bg: #ffffff; --fg: #000000; --hi: #0040ff; --dim: #555555; color-scheme: light; }
+:root[data-scheme="by"] { --bg: #fff2a8; --fg: #000000; --hi: #0040ff; --dim: #5a5230; color-scheme: light; }
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); padding-inline: 16px; padding-block: 12px; overflow: hidden; user-select: none; -webkit-user-select: none; }
+#app { height: 100%; }
+
+.screen { height: 100%; display: grid; gap: var(--gap); min-height: 0; }
+#reader { grid-template-columns: minmax(0, 1fr); }
+#reader .panel { display: none; }
+#reader.text-on { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+#reader.text-on .panel { display: block; }
+@media (max-aspect-ratio: 1/1) {
+  #reader.text-on { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 34fr) minmax(0, 66fr); }
+}
+.controls { display: grid; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 0.6fr); gap: var(--gap); min-height: 0; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.6fr) minmax(0, 1fr); gap: var(--gap); min-height: 0; }
+
+.btn {
+  position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.05em;
+  min-width: 0; min-height: 0; margin: 0; padding: 0 0.35em;
+  font: 700 var(--label) / 1.05 var(--font); text-transform: uppercase; letter-spacing: 0.02em;
+  color: var(--fg); background: var(--bg); border: var(--border) solid var(--fg); border-radius: var(--radius);
+  cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.btn:focus-visible { outline: var(--border) solid var(--hi); outline-offset: 3px; }
+.btn.filled { background: var(--fg); color: var(--bg); }
+.btn.pressed { background: var(--fg); color: var(--bg); }
+.btn.filled.pressed { background: var(--bg); color: var(--fg); }
+.btn.describing { outline: var(--border) solid var(--hi); outline-offset: 3px; }
+.btn .lbl { display: block; width: 100%; min-width: 0; max-width: 100%; overflow: hidden; text-align: center; }
+.btn .lbl.nowrap { white-space: nowrap; }
+.btn .glyph { font-size: 1.5em; line-height: 1; }
+.btn .sub { font-size: 0.5em; letter-spacing: 0.1em; }
+.btn .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--hi); opacity: 0.5; pointer-events: none; transition: none; }
+.btn.holding .fill { width: 100%; transition: width var(--hold-ms, 1000ms) linear; }
+.btn.spacer { visibility: hidden; }
+
+.panel { position: relative; min-height: 0; overflow: auto; border: var(--border) solid var(--fg); border-radius: var(--radius); padding: 0.4em 0.5em; font-size: var(--text); line-height: 1.35; }
+.v { padding: 0.12em 0.3em; border: var(--border) solid transparent; border-radius: 0.35em; margin: 0.1em 0; }
+.v .n { font-weight: 700; font-size: 0.7em; margin-right: 0.35em; opacity: 0.85; }
+.v.cur { border-color: var(--fg); }
+
+#books { grid-template-rows: minmax(0, 1fr) minmax(0, 5fr) minmax(0, 0.6fr); }
+.listwrap { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 1fr); gap: var(--gap); min-height: 0; }
+.list { display: grid; grid-template-rows: repeat(6, minmax(0, 1fr)); gap: var(--gap); min-height: 0; }
+.arrows { display: grid; grid-template-rows: repeat(2, minmax(0, 1fr)); gap: var(--gap); min-height: 0; }
+
+#chapters { grid-template-rows: minmax(0, 0.55fr) minmax(0, 5fr) minmax(0, 0.6fr); }
+.heading { display: flex; align-items: center; justify-content: center; min-width: 0; text-align: center; font: 700 calc(var(--label) * 0.75) / 1.1 var(--font); text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg); }
+.grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); gap: var(--gap); min-height: 0; }
+.grid .btn { font-size: calc(var(--label) * 1.25); font-variant-numeric: tabular-nums; }
+
+#settings { grid-template-rows: repeat(7, minmax(0, 1fr)) minmax(0, 0.7fr); }
+.srow { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr) minmax(0, 1fr); gap: var(--gap); min-height: 0; }
+.set { display: flex; flex-direction: column; justify-content: center; min-width: 0; padding: 0 0.5em; border: var(--border) dashed var(--dim); border-radius: var(--radius); font: 700 calc(var(--label) * 0.7) / 1.1 var(--font); text-transform: uppercase; letter-spacing: 0.04em; overflow: hidden; }
+.set .name { opacity: 0.85; font-size: 0.8em; }
+.set .val { font-size: 1.1em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.srow .btn { font-size: calc(var(--label) * 0.8); }
+.srow .btn.span2 { grid-column: 2 / span 2; }
+
+#toast { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 8px); left: 50%; transform: translateX(-50%); max-width: min(92vw, 900px); padding: 0.35em 0.8em; border-radius: 999px; background: var(--fg); color: var(--bg); font: 700 clamp(13px, 2.2vh, 20px) / 1.2 var(--font); opacity: 0; transition: opacity 0.25s; pointer-events: none; z-index: 9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#toast.show { opacity: 0.93; }
+@media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
+</style>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<main id="app">
+  <section id="reader" class="screen text-on">
+    <div class="panel" id="panel"></div>
+    <div class="controls">
+      <button class="btn" id="bTestament" data-act="testament"><span class="lbl nowrap">OLD TESTAMENT</span><span class="sub" id="bTestamentSub">PRESS FOR NEW TESTAMENT</span></button>
+      <div class="row">
+        <button class="btn" data-act="prevBook" data-say="Previous book." aria-label="Previous book"><span class="glyph">◀</span><span class="sub">BOOK</span></button>
+        <button class="btn" id="bBook" data-act="book" data-full="JOHN" data-short="JOHN"><span class="lbl nowrap">JOHN</span></button>
+        <button class="btn" data-act="nextBook" data-say="Next book." aria-label="Next book"><span class="glyph">▶</span><span class="sub">BOOK</span></button>
+      </div>
+      <div class="row">
+        <button class="btn" data-act="prevChap" data-say="Previous chapter." aria-label="Previous chapter"><span class="glyph">◀</span><span class="sub">CHAP.</span></button>
+        <button class="btn" id="bChapter" data-act="chapter" data-full="CHAPTER 3" data-short="CHAP. 3"><span class="lbl nowrap">CHAPTER 3</span></button>
+        <button class="btn" data-act="nextChap" data-say="Next chapter." aria-label="Next chapter"><span class="glyph">▶</span><span class="sub">CHAP.</span></button>
+      </div>
+      <div class="row">
+        <button class="btn" data-act="prevVerse" data-say="Previous verse." aria-label="Previous verse"><span class="glyph">◀</span><span class="sub">VERSE</span></button>
+        <button class="btn filled" id="bPlay" data-act="play" data-say="Play."><span class="glyph">▶</span><span class="sub">PLAY</span></button>
+        <button class="btn" data-act="nextVerse" data-say="Next verse." aria-label="Next verse"><span class="glyph">▶</span><span class="sub">VERSE</span></button>
+      </div>
+      <button class="btn" id="bSettings" data-act="settings" data-say="Settings."><span class="lbl nowrap">SETTINGS</span></button>
+    </div>
+  </section>
+
+  <section id="books" class="screen" hidden>
+    <button class="btn" id="bTestamentList" data-act="listTestament"><span class="lbl nowrap">NEW TESTAMENT</span><span class="sub">PRESS TO SWITCH</span></button>
+    <div class="listwrap">
+      <div class="list" id="bookList"></div>
+      <div class="arrows">
+        <button class="btn" data-act="bookUp" data-say="Up. Earlier books." aria-label="Up, earlier books"><span class="glyph">▲</span><span class="sub">UP</span></button>
+        <button class="btn" data-act="bookDown" data-say="Down. Later books." aria-label="Down, later books"><span class="glyph">▼</span><span class="sub">DOWN</span></button>
+      </div>
+    </div>
+    <button class="btn" data-act="back" data-say="Back."><span class="lbl nowrap">BACK</span></button>
+  </section>
+
+  <section id="chapters" class="screen" hidden>
+    <div class="heading" id="chapHeading"></div>
+    <div class="listwrap">
+      <div class="grid" id="chapGrid"></div>
+      <div class="arrows">
+        <button class="btn" data-act="chapUp" data-say="Up. Earlier chapters." aria-label="Up, earlier chapters"><span class="glyph">▲</span><span class="sub">UP</span></button>
+        <button class="btn" data-act="chapDown" data-say="Down. Later chapters." aria-label="Down, later chapters"><span class="glyph">▼</span><span class="sub">DOWN</span></button>
+      </div>
+    </div>
+    <button class="btn" data-act="back" data-say="Back."><span class="lbl nowrap">BACK</span></button>
+  </section>
+
+  <section id="settings" class="screen" hidden>
+    <div class="srow"><div class="set" id="sMode"><span class="name">Activate buttons by</span><span class="val" id="vMode">Click</span></div><button class="btn" id="bModeClick" data-act="modeClick" data-say="Click mode."><span class="lbl nowrap">CLICK</span></button><button class="btn" id="bModeHold" data-act="modeHold" data-say="Hold mode."><span class="lbl nowrap">HOLD</span></button></div>
+    <div class="srow"><div class="set" id="sHold"><span class="name">Hold time</span><span class="val" id="vHold">1 second</span></div><button class="btn" data-act="holdShorter" data-say="Shorter hold time."><span class="lbl nowrap">SHORTER</span></button><button class="btn" data-act="holdLonger" data-say="Longer hold time."><span class="lbl nowrap">LONGER</span></button></div>
+    <div class="srow"><div class="set" id="sScheme"><span class="name">Colors</span><span class="val" id="vScheme">White on black</span></div><button class="btn span2" data-act="scheme" data-say="Change colors."><span class="lbl nowrap">CHANGE COLORS</span></button></div>
+    <div class="srow"><div class="set" id="sText"><span class="name">Show Scripture</span><span class="val" id="vText">On</span></div><button class="btn span2" id="bShowText" data-act="showText" data-say="Turn Scripture off."><span class="lbl nowrap">TURN OFF</span></button></div>
+    <div class="srow"><div class="set" id="sSize"><span class="name">Scripture size</span><span class="val" id="vSize">Large</span></div><button class="btn" data-act="textSmaller" data-say="Smaller Scripture."><span class="lbl nowrap">SMALLER</span></button><button class="btn" data-act="textLarger" data-say="Larger Scripture."><span class="lbl nowrap">LARGER</span></button></div>
+    <div class="srow"><div class="set" id="sBtn"><span class="name">Button text size</span><span class="val" id="vBtn">Medium</span></div><button class="btn" data-act="btnSmaller" data-say="Smaller button text."><span class="lbl nowrap">SMALLER</span></button><button class="btn" data-act="btnLarger" data-say="Larger button text."><span class="lbl nowrap">LARGER</span></button></div>
+    <div class="srow"><div class="set" id="sVoice"><span class="name">Voice</span><span class="val" id="vVoice">Default</span></div><button class="btn" data-act="voicePrev" data-say="Previous voice."><span class="lbl nowrap">PREVIOUS</span></button><button class="btn" data-act="voiceNext" data-say="Next voice."><span class="lbl nowrap">NEXT</span></button></div>
+    <button class="btn" data-act="back" data-say="Back."><span class="lbl nowrap">BACK</span></button>
+  </section>
+</main>
+
+<script>
+const BOOKS = [{"n":"Genesis","s":"Gen.","t":"OT","v":[31,25,24,26,32,22,24,22,29,32,32,20,18,24,21,16,27,33,38,18,34,24,20,67,34,35,46,22,35,43,55,32,20,31,29,43,36,30,23,23,57,38,34,34,28,34,31,22,33,26]},{"n":"Exodus","s":"Exod.","t":"OT","v":[22,25,22,31,23,30,25,32,35,29,10,51,22,31,27,36,16,27,25,26,36,31,33,18,40,37,21,43,46,38,18,35,23,35,35,38,29,31,43,38]},{"n":"Leviticus","s":"Lev.","t":"OT","v":[17,16,17,35,19,30,38,36,24,20,47,8,59,57,33,34,16,30,37,27,24,33,44,23,55,46,34]},{"n":"Numbers","s":"Num.","t":"OT","v":[54,34,51,49,31,27,89,26,23,36,35,16,33,45,41,50,13,32,22,29,35,41,30,25,18,65,23,31,40,16,54,42,56,29,34,13]},{"n":"Deuteronomy","s":"Deut.","t":"OT","v":[46,37,29,49,33,25,26,20,29,22,32,32,18,29,23,22,20,22,21,20,23,30,25,22,19,19,26,68,29,20,30,52,29,12]},{"n":"Joshua","s":"Josh.","t":"OT","v":[18,24,17,24,15,27,26,35,27,43,23,24,33,15,63,10,18,28,51,9,45,34,16,33]},{"n":"Judges","s":"Judg.","t":"OT","v":[36,23,31,24,31,40,25,35,57,18,40,15,25,20,20,31,13,31,30,48,25]},{"n":"Ruth","s":"Ruth","t":"OT","v":[22,23,18,22]},{"n":"1 Samuel","s":"1 Sam.","t":"OT","v":[28,36,21,22,12,21,17,22,27,27,15,25,23,52,35,23,58,30,24,42,15,23,29,22,44,25,12,25,11,31,13]},{"n":"2 Samuel","s":"2 Sam.","t":"OT","v":[27,32,39,12,25,23,29,18,13,19,27,31,39,33,37,23,29,33,43,26,22,51,39,25]},{"n":"1 Kings","s":"1 Kings","t":"OT","v":[53,46,28,34,18,38,51,66,28,29,43,33,34,31,34,34,24,46,21,43,29,53]},{"n":"2 Kings","s":"2 Kings","t":"OT","v":[18,25,27,44,27,33,20,29,37,36,21,21,25,29,38,20,41,37,37,21,26,20,37,20,30]},{"n":"1 Chronicles","s":"1 Chron.","t":"OT","v":[54,55,24,43,26,81,40,40,44,14,47,40,14,17,29,43,27,17,19,8,30,19,32,31,31,32,34,21,30]},{"n":"2 Chronicles","s":"2 Chron.","t":"OT","v":[17,18,17,22,14,42,22,18,31,19,23,16,22,15,19,14,19,34,11,37,20,12,21,27,28,23,9,27,36,27,21,33,25,33,27,23]},{"n":"Ezra","s":"Ezra","t":"OT","v":[11,70,13,24,17,22,28,36,15,44]},{"n":"Nehemiah","s":"Neh.","t":"OT","v":[11,20,32,23,19,19,73,18,38,39,36,47,31]},{"n":"Esther","s":"Esth.","t":"OT","v":[22,23,15,17,14,14,10,17,32,3]},{"n":"Job","s":"Job","t":"OT","v":[22,13,26,21,27,30,21,22,35,22,20,25,28,22,35,22,16,21,29,29,34,30,17,25,6,14,23,28,25,31,40,22,33,37,16,33,24,41,30,24,34,17]},{"n":"Psalms","s":"Psalms","t":"OT","v":[6,12,8,8,12,10,17,9,20,18,7,8,6,7,5,11,15,50,14,9,13,31,6,10,22,12,14,9,11,12,24,11,22,22,28,12,40,22,13,17,13,11,5,26,17,11,9,14,20,23,19,9,6,7,23,13,11,11,17,12,8,12,11,10,13,20,7,35,36,5,24,20,28,23,10,12,20,72,13,19,16,8,18,12,13,17,7,18,52,17,16,15,5,23,11,13,12,9,9,5,8,28,22,35,45,48,43,13,31,7,10,10,9,8,18,19,2,29,176,7,8,9,4,8,5,6,5,6,8,8,3,18,3,3,21,26,9,8,24,13,10,7,12,15,21,10,20,14,9,6]},{"n":"Proverbs","s":"Prov.","t":"OT","v":[33,22,35,27,23,35,27,36,18,32,31,28,25,35,33,33,28,24,29,30,31,29,35,34,28,28,27,28,27,33,31]},{"n":"Ecclesiastes","s":"Eccles.","t":"OT","v":[18,26,22,16,20,12,29,17,18,20,10,14]},{"n":"Song of Solomon","s":"Song of Sol.","t":"OT","v":[17,17,11,16,16,13,13,14]},{"n":"Isaiah","s":"Isa.","t":"OT","v":[31,22,26,6,30,13,25,22,21,34,16,6,22,32,9,14,14,7,25,6,17,25,18,23,12,21,13,29,24,33,9,20,24,17,10,22,38,22,8,31,29,25,28,28,25,13,15,22,26,11,23,15,12,17,13,12,21,14,21,22,11,12,19,12,25,24]},{"n":"Jeremiah","s":"Jer.","t":"OT","v":[19,37,25,31,31,30,34,22,26,25,23,17,27,22,21,21,27,23,15,18,14,30,40,10,38,24,22,17,32,24,40,44,26,22,19,32,21,28,18,16,18,22,13,30,5,28,7,47,39,46,64,34]},{"n":"Lamentations","s":"Lament.","t":"OT","v":[22,22,66,22,22]},{"n":"Ezekiel","s":"Ezek.","t":"OT","v":[28,10,27,17,17,14,27,18,11,22,25,28,23,23,8,63,24,32,14,49,32,31,49,27,17,21,36,26,21,26,18,32,33,31,15,38,28,23,29,49,26,20,27,31,25,24,23,35]},{"n":"Daniel","s":"Dan.","t":"OT","v":[21,49,30,37,31,28,28,27,27,21,45,13]},{"n":"Hosea","s":"Hos.","t":"OT","v":[11,23,5,19,15,11,16,14,17,15,12,14,16,9]},{"n":"Joel","s":"Joel","t":"OT","v":[20,32,21]},{"n":"Amos","s":"Amos","t":"OT","v":[15,16,15,13,27,14,17,14,15]},{"n":"Obadiah","s":"Obad.","t":"OT","v":[21]},{"n":"Jonah","s":"Jonah","t":"OT","v":[17,10,10,11]},{"n":"Micah","s":"Micah","t":"OT","v":[16,13,12,13,15,16,20]},{"n":"Nahum","s":"Nahum","t":"OT","v":[15,13,19]},{"n":"Habakkuk","s":"Hab.","t":"OT","v":[17,20,19]},{"n":"Zephaniah","s":"Zeph.","t":"OT","v":[18,15,20]},{"n":"Haggai","s":"Hag.","t":"OT","v":[15,23]},{"n":"Zechariah","s":"Zech.","t":"OT","v":[21,13,10,14,11,15,14,23,17,12,17,14,9,21]},{"n":"Malachi","s":"Mal.","t":"OT","v":[14,17,18,6]},{"n":"Matthew","s":"Matt.","t":"NT","v":[25,23,17,25,48,34,29,34,38,42,30,50,58,36,39,28,27,35,30,34,46,46,39,51,46,75,66,20]},{"n":"Mark","s":"Mark","t":"NT","v":[45,28,35,41,43,56,37,38,50,52,33,44,37,72,47,20]},{"n":"Luke","s":"Luke","t":"NT","v":[80,52,38,44,39,49,50,56,62,42,54,59,35,35,32,31,37,43,48,47,38,71,56,53]},{"n":"John","s":"John","t":"NT","v":[51,25,36,54,47,71,53,59,41,42,57,50,38,31,27,33,26,40,42,31,25]},{"n":"Acts","s":"Acts","t":"NT","v":[26,47,26,37,42,15,60,40,43,48,30,25,52,28,41,40,34,28,41,38,40,30,35,27,27,32,44,31]},{"n":"Romans","s":"Rom.","t":"NT","v":[32,29,31,25,21,23,25,39,33,21,36,21,14,23,33,27]},{"n":"1 Corinthians","s":"1 Cor.","t":"NT","v":[31,16,23,21,13,20,40,13,27,33,34,31,13,40,58,24]},{"n":"2 Corinthians","s":"2 Cor.","t":"NT","v":[24,17,18,18,21,18,16,24,15,18,33,21,14]},{"n":"Galatians","s":"Gal.","t":"NT","v":[24,21,29,31,26,18]},{"n":"Ephesians","s":"Eph.","t":"NT","v":[23,22,21,32,33,24]},{"n":"Philippians","s":"Phil.","t":"NT","v":[30,30,21,23]},{"n":"Colossians","s":"Col.","t":"NT","v":[29,23,25,18]},{"n":"1 Thessalonians","s":"1 Thess.","t":"NT","v":[10,20,13,18,28]},{"n":"2 Thessalonians","s":"2 Thess.","t":"NT","v":[12,17,18]},{"n":"1 Timothy","s":"1 Tim.","t":"NT","v":[20,15,16,16,25,21]},{"n":"2 Timothy","s":"2 Tim.","t":"NT","v":[18,26,17,22]},{"n":"Titus","s":"Titus","t":"NT","v":[16,15,15]},{"n":"Philemon","s":"Philem.","t":"NT","v":[25]},{"n":"Hebrews","s":"Heb.","t":"NT","v":[14,18,19,16,14,20,28,13,28,39,40,29,25]},{"n":"James","s":"James","t":"NT","v":[27,26,18,17,20]},{"n":"1 Peter","s":"1 Pet.","t":"NT","v":[25,25,22,19,14]},{"n":"2 Peter","s":"2 Pet.","t":"NT","v":[21,22,18]},{"n":"1 John","s":"1 John","t":"NT","v":[10,29,24,21,21]},{"n":"2 John","s":"2 John","t":"NT","v":[13]},{"n":"3 John","s":"3 John","t":"NT","v":[14]},{"n":"Jude","s":"Jude","t":"NT","v":[25]},{"n":"Revelation","s":"Rev.","t":"NT","v":[20,29,22,11,14,17,17,13,21,11,19,17,18,20,8,21,18,24,21,15,27,21]}];
+const JOHN3 = ["There was a man of the Pharisees, named Nicodemus, a ruler of the Jews:", "The same came to Jesus by night, and said unto him, Rabbi, we know that thou art a teacher come from God: for no man can do these miracles that thou doest, except God be with him.", "Jesus answered and said unto him, Verily, verily, I say unto thee, Except a man be born again, he cannot see the kingdom of God.", "Nicodemus saith unto him, How can a man be born when he is old? can he enter the second time into his mother’s womb, and be born?", "Jesus answered, Verily, verily, I say unto thee, Except a man be born of water and of the Spirit, he cannot enter into the kingdom of God.", "That which is born of the flesh is flesh; and that which is born of the Spirit is spirit.", "Marvel not that I said unto thee, Ye must be born again.", "The wind bloweth where it listeth, and thou hearest the sound thereof, but canst not tell whence it cometh, and whither it goeth: so is every one that is born of the Spirit.", "Nicodemus answered and said unto him, How can these things be?", "Jesus answered and said unto him, Art thou a master of Israel, and knowest not these things?", "Verily, verily, I say unto thee, We speak that we do know, and testify that we have seen; and ye receive not our witness.", "If I have told you earthly things, and ye believe not, how shall ye believe, if I tell you of heavenly things?", "And no man hath ascended up to heaven, but he that came down from heaven, even the Son of man which is in heaven.", "And as Moses lifted up the serpent in the wilderness, even so must the Son of man be lifted up:", "That whosoever believeth in him should not perish, but have eternal life.", "For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.", "For God sent not his Son into the world to condemn the world; but that the world through him might be saved.", "He that believeth on him is not condemned: but he that believeth not is condemned already, because he hath not believed in the name of the only begotten Son of God.", "And this is the condemnation, that light is come into the world, and men loved darkness rather than light, because their deeds were evil.", "For every one that doeth evil hateth the light, neither cometh to the light, lest his deeds should be reproved.", "But he that doeth truth cometh to the light, that his deeds may be made manifest, that they are wrought in God.", "After these things came Jesus and his disciples into the land of Judea; and there he tarried with them, and baptized.", "And John also was baptizing in Ænon near to Salim, because there was much water there: and they came, and were baptized.", "For John was not yet cast into prison.", "Then there arose a question between some of John’s disciples and the Jews about purifying.", "And they came unto John, and said unto him, Rabbi, he that was with thee beyond Jordan, to whom thou barest witness, behold, the same baptizeth, and all men come to him.", "John answered and said, A man can receive nothing, except it be given him from heaven.", "Ye yourselves bear me witness, that I said, I am not the Christ, but that I am sent before him.", "He that hath the bride is the bridegroom: but the friend of the bridegroom, which standeth and heareth him, rejoiceth greatly because of the bridegroom’s voice: this my joy therefore is fulfilled.", "He must increase, but I must decrease.", "He that cometh from above is above all: he that is of the earth is earthly, and speaketh of the earth: he that cometh from heaven is above all.", "And what he hath seen and heard, that he testifieth; and no man receiveth his testimony.", "He that hath received his testimony hath set to his seal that God is true.", "For he whom God hath sent speaketh the words of God: for God giveth not the Spirit by measure unto him.", "The Father loveth the Son, and hath given all things into his hand.", "He that believeth on the Son hath everlasting life: and he that believeth not the Son shall not see life; but the wrath of God abideth on him."];
+const SCHEMES = [['wb', 'White on black'], ['yb', 'Yellow on black'], ['bw', 'Black on white'], ['by', 'Black on pale yellow']];
+const TEXT_STEPS = [['Small', '4vh'], ['Medium', '5.3vh'], ['Large', '7vh'], ['Extra large', '9.4vh'], ['Huge', '11.8vh']];
+const BTN_STEPS = [['Small', 0.8], ['Medium', 1], ['Large', 1.2], ['Extra large', 1.4]];
+const PAGE_BOOKS = 6, PAGE_CHAPS = 20, KEY = 'bible-reader-mock-v3';
+const SAMPLE = 'For God so loved the world, that he gave his only begotten Son.';
+
+const S = { book: 42, chapter: 3, verse: 16, mode: 'click', holdMs: 1000, scheme: 'wb', showText: true, textStep: 2, btnStep: 1, voice: '' };
+try { Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+let playing = false, wasPlaying = false, listTestament = 'NT', bookPage = 0, chapBook = 0, chapPage = 0, screen = 'reader';
+const $ = s => document.querySelector(s);
+const book = () => BOOKS[S.book];
+const tName = t => t === 'OT' ? 'Old Testament' : 'New Testament';
+const other = t => t === 'OT' ? 'NT' : 'OT';
+const firstBookOf = t => BOOKS.findIndex(b => b.t === t);
+const verseCount = (b = S.book, c = S.chapter) => BOOKS[b].v[c - 1];
+function verseText(b, c, n) {
+  if (BOOKS[b].n === 'John' && c === 3) return JOHN3[n - 1];
+  return 'Verse ' + n + ' of ' + BOOKS[b].n + ' chapter ' + c + '. Sample text for the mockup.';
+}
+const ref = () => book().n + ', chapter ' + S.chapter + ', verse ' + S.verse;
+
+/* ---------- speech (device voice through the Web Speech API) ---------- */
+let speechOK = 'speechSynthesis' in window, current = null, voices = [];
+const NOVELTY = new Set(['Albert', 'Bad News', 'Bahh', 'Bells', 'Boing', 'Bubbles', 'Cellos', 'Deranged', 'Eddy', 'Flo', 'Fred', 'Good News', 'Grandma', 'Grandpa', 'Hysterical', 'Jester', 'Junior', 'Kathy', 'Organ', 'Pipe Organ', 'Ralph', 'Reed', 'Rocko', 'Sandy', 'Shelley', 'Superstar', 'Trinoids', 'Whisper', 'Wobble', 'Zarvox']);
+const voiceRank = v => (/premium|enhanced|natural/i.test(v.name) ? 0 : 1) + (v.lang === 'en-US' ? 0 : 2);
+function loadVoices() {
+  try {
+    const all = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang) && !NOVELTY.has(v.name.replace(/\s*\(.*$/, '')));
+    all.sort((a, b) => voiceRank(a) - voiceRank(b) || a.name.localeCompare(b.name));
+    voices = all;
+  } catch (e) { voices = []; }
+}
+if (speechOK) { loadVoices(); try { speechSynthesis.onvoiceschanged = loadVoices; } catch (e) {} }
+function currentVoice() { return voices.find(v => v.voiceURI === S.voice) || null; }
+function voiceLabel() { const v = currentVoice(); if (!v) return 'Default'; return v.name + (v.lang === 'en-US' ? '' : ' (' + v.lang + ')'); }
+function toast(t) {
+  const el = $('#toast'); el.textContent = '🔊 ' + t; el.classList.add('show');
+  clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 2600);
+}
+function speak(text, onend) {
+  toast(text);
+  const token = {}; current = token;
+  const fallback = Math.min(6000, 600 + text.length * 50);
+  const later = () => { if (onend) setTimeout(() => { if (current === token) onend(); }, fallback); };
+  if (!speechOK) { later(); return; }
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    const v = currentVoice(); if (v) u.voice = v;
+    let started = false, finished = false;
+    u.onstart = () => { started = true; };
+    u.onend = () => { if (finished) return; finished = true; if (current === token && onend) onend(); };
+    u.onerror = e => {
+      if (finished) return; finished = true;
+      const kind = e && e.error;
+      if (kind === 'interrupted' || kind === 'canceled') return;
+      speechOK = false; later();
+    };
+    setTimeout(() => { try { speechSynthesis.speak(u); } catch (err) { if (!finished) { finished = true; speechOK = false; later(); } } }, 40);
+    setTimeout(() => { if (!started && !finished && current === token) { finished = true; speechOK = false; try { speechSynthesis.cancel(); } catch (e) {} later(); } }, 3000);
+  } catch (e) { speechOK = false; later(); }
+}
+function hushAll() { current = null; try { speechSynthesis.cancel(); } catch (e) {} }
+
+/* ---------- reading loop ---------- */
+function speakVerse() {
+  if (!playing) return;
+  renderPanel();
+  speak(verseText(S.book, S.chapter, S.verse), () => {
+    if (!playing) return;
+    if (S.verse < verseCount()) { S.verse++; save(); speakVerse(); }
+    else stepChapter(1, true);
+  });
+}
+function announcePlace(prefix) {
+  const t = (prefix ? prefix + ' ' : '') + book().n + ', chapter ' + S.chapter + '.';
+  if (playing) speak(t, () => speakVerse()); else speak(t);
+}
+function togglePlay() {
+  if (playing) { playing = false; hushAll(); renderReader(); speak('Pause.'); }
+  else { playing = true; renderReader(); speak('Play.', () => speakVerse()); }
+}
+function stepBook(d) {
+  const nb = S.book + d;
+  if (nb < 0 || nb >= BOOKS.length) { speak(nb < 0 ? 'This is the first book.' : 'This is the last book.'); return; }
+  S.book = nb; S.chapter = 1; S.verse = 1; save(); renderReader();
+  announcePlace(d > 0 ? 'Next book.' : 'Previous book.');
+}
+function stepChapter(d, auto) {
+  let b = S.book, c = S.chapter + d;
+  if (c < 1) { if (b === 0) { speak('This is the first chapter.'); return; } b--; c = BOOKS[b].v.length; }
+  else if (c > BOOKS[b].v.length) { if (b === BOOKS.length - 1) { playing = false; renderReader(); speak('End of the Bible.'); return; } b++; c = 1; }
+  S.book = b; S.chapter = c; S.verse = 1; save(); renderReader();
+  announcePlace(auto ? '' : (d > 0 ? 'Next chapter.' : 'Previous chapter.'));
+}
+function stepVerse(d) {
+  let b = S.book, c = S.chapter, v = S.verse + d;
+  if (v < 1) {
+    if (c > 1) { c--; v = BOOKS[b].v[c - 1]; }
+    else if (b > 0) { b--; c = BOOKS[b].v.length; v = BOOKS[b].v[c - 1]; }
+    else { speak('This is the first verse.'); return; }
+  } else if (v > BOOKS[b].v[c - 1]) {
+    if (c < BOOKS[b].v.length) { c++; v = 1; }
+    else if (b < BOOKS.length - 1) { b++; c = 1; v = 1; }
+    else { speak('This is the last verse.'); return; }
+  }
+  const changed = b !== S.book || c !== S.chapter;
+  S.book = b; S.chapter = c; S.verse = v; save(); renderReader();
+  const lead = changed ? BOOKS[b].n + ', chapter ' + c + '. Verse ' + v + '.' : 'Verse ' + v + '.';
+  if (playing) speak(lead, () => speakVerse());
+  else speak(lead, () => speak(verseText(b, c, v)));
+}
+
+/* ---------- screens ---------- */
+function show(id) {
+  screen = id;
+  for (const s of document.querySelectorAll('.screen')) s.hidden = s.id !== id;
+  fitAll();
+}
+function leaveReader() { wasPlaying = playing; playing = false; hushAll(); renderReader(); }
+function returnHome(announce) {
+  show('reader');
+  if (wasPlaying) { playing = true; renderReader(); speak(announce, () => speakVerse()); }
+  else { renderReader(); speak(announce); }
+  wasPlaying = false;
+}
+function booksOf(t) { return BOOKS.map((b, i) => ({ b, i })).filter(x => x.b.t === t); }
+function rangeBooks() {
+  const list = booksOf(listTestament);
+  const a = list[bookPage * PAGE_BOOKS], z = list[Math.min(list.length - 1, (bookPage + 1) * PAGE_BOOKS - 1)];
+  return a.b.n + ' to ' + z.b.n + '.';
+}
+function openBooks() {
+  leaveReader();
+  listTestament = book().t;
+  const idx = booksOf(listTestament).findIndex(x => x.i === S.book);
+  bookPage = Math.floor(idx / PAGE_BOOKS);
+  renderBooks(); show('books');
+  speak('Choose a book. ' + tName(listTestament) + '. ' + rangeBooks());
+}
+function mk(text, act, say) {
+  const b = document.createElement('button');
+  b.className = 'btn'; b.dataset.act = act; b.dataset.say = say;
+  const l = document.createElement('span'); l.className = 'lbl nowrap'; l.textContent = text; b.appendChild(l);
+  addFill(b); return b;
+}
+function renderBooks() {
+  const list = booksOf(listTestament), el = $('#bookList'); el.innerHTML = '';
+  const slice = list.slice(bookPage * PAGE_BOOKS, bookPage * PAGE_BOOKS + PAGE_BOOKS);
+  for (const x of slice) {
+    const b = mk(x.b.n.toUpperCase(), 'bookItem', x.b.n + (x.i === S.book ? '. This is the current book.' : '.'));
+    b.dataset.index = x.i; b.dataset.full = x.b.n.toUpperCase(); b.dataset.short = x.b.s.toUpperCase();
+    if (x.i === S.book) { b.classList.add('filled'); b.setAttribute('aria-current', 'true'); }
+    el.appendChild(b);
+  }
+  for (let k = slice.length; k < PAGE_BOOKS; k++) { const sp = mk('', 'none', ''); sp.classList.add('spacer'); sp.tabIndex = -1; el.appendChild(sp); }
+  $('#bTestamentList .lbl').textContent = tName(listTestament).toUpperCase();
+  $('#bTestamentList').dataset.say = tName(listTestament) + '. Press to switch to the ' + tName(other(listTestament)) + '.';
+  fitAll();
+}
+function rangeChaps() {
+  const n = BOOKS[chapBook].v.length, a = chapPage * PAGE_CHAPS + 1, z = Math.min(n, a + PAGE_CHAPS - 1);
+  return 'Chapters ' + a + ' to ' + z + ' of ' + n + '.';
+}
+function openChapters(b) {
+  leaveReader();
+  chapBook = b; chapPage = Math.floor(((b === S.book ? S.chapter : 1) - 1) / PAGE_CHAPS);
+  renderChapters(); show('chapters');
+  speak(BOOKS[b].n + '. Choose a chapter. ' + rangeChaps());
+}
+function renderChapters() {
+  const n = BOOKS[chapBook].v.length, el = $('#chapGrid'); el.innerHTML = '';
+  const a = chapPage * PAGE_CHAPS + 1, z = Math.min(n, a + PAGE_CHAPS - 1);
+  for (let c = a; c <= z; c++) {
+    const b = mk(String(c), 'chapItem', 'Chapter ' + c + (chapBook === S.book && c === S.chapter ? '. This is the current chapter.' : '.'));
+    b.dataset.chapter = c;
+    if (chapBook === S.book && c === S.chapter) { b.classList.add('filled'); b.setAttribute('aria-current', 'true'); }
+    el.appendChild(b);
+  }
+  for (let c = z + 1; c <= a + PAGE_CHAPS - 1; c++) { const sp = mk('', 'none', ''); sp.classList.add('spacer'); sp.tabIndex = -1; el.appendChild(sp); }
+  const h = $('#chapHeading');
+  h.textContent = BOOKS[chapBook].n + ' · ' + rangeChaps().replace(/\.$/, '');
+  h.dataset.say = BOOKS[chapBook].n + '. ' + rangeChaps();
+}
+function renderReader() {
+  const b = book(), o = other(b.t);
+  $('#bTestament .lbl').textContent = tName(b.t).toUpperCase();
+  $('#bTestamentSub').textContent = 'PRESS FOR ' + tName(o).toUpperCase();
+  $('#bTestament').dataset.say = tName(b.t) + '. Press to switch to the ' + tName(o) + ', ' + BOOKS[firstBookOf(o)].n + ' chapter 1.';
+  const bb = $('#bBook'); bb.dataset.full = b.n.toUpperCase(); bb.dataset.short = b.s.toUpperCase(); bb.dataset.say = b.n + '. Press to choose a book.';
+  const cb = $('#bChapter'); cb.dataset.full = 'CHAPTER ' + S.chapter; cb.dataset.short = 'CHAP. ' + S.chapter; cb.dataset.say = 'Chapter ' + S.chapter + '. Press to choose a chapter.';
+  const pb = $('#bPlay'); pb.querySelector('.glyph').textContent = playing ? '❚❚' : '▶'; pb.querySelector('.sub').textContent = playing ? 'PAUSE' : 'PLAY'; pb.dataset.say = playing ? 'Pause.' : 'Play.';
+  $('#reader').classList.toggle('text-on', S.showText);
+  fitAll(); renderPanel();
+}
+function renderPanel() {
+  const p = $('#panel');
+  if (!S.showText) { p.innerHTML = ''; p.dataset.key = ''; return; }
+  const key = S.book + '-' + S.chapter;
+  if (p.dataset.key !== key) {
+    p.dataset.key = key; p.innerHTML = '';
+    for (let v = 1; v <= verseCount(); v++) {
+      const d = document.createElement('div'); d.className = 'v';
+      const n = document.createElement('span'); n.className = 'n'; n.textContent = v; d.appendChild(n);
+      d.appendChild(document.createTextNode(verseText(S.book, S.chapter, v)));
+      p.appendChild(d);
+    }
+  }
+  let cur = null;
+  Array.from(p.children).forEach((d, i) => { const on = i + 1 === S.verse; d.classList.toggle('cur', on); if (on) cur = d; });
+  if (cur) p.scrollTop = cur.offsetTop - p.clientHeight / 2 + cur.offsetHeight / 2;
+  p.dataset.say = ref() + '.';
+}
+function holdLabel() { const s = S.holdMs / 1000; return (s === 1 ? '1 second' : (String(s).replace(/\.?0+$/, '') + ' seconds')); }
+function renderSettings() {
+  loadVoices();
+  $('#vMode').textContent = S.mode === 'hold' ? 'Hold' : 'Click';
+  $('#bModeClick').classList.toggle('filled', S.mode === 'click');
+  $('#bModeHold').classList.toggle('filled', S.mode === 'hold');
+  $('#bModeClick').dataset.say = 'Click mode.' + (S.mode === 'click' ? ' Selected.' : '');
+  $('#bModeHold').dataset.say = 'Hold mode.' + (S.mode === 'hold' ? ' Selected.' : '');
+  $('#sMode').dataset.say = 'Activate buttons by. Currently ' + (S.mode === 'hold' ? 'hold, ' + holdLabel() + '.' : 'click.');
+  $('#vHold').textContent = holdLabel(); $('#sHold').dataset.say = 'Hold time. Currently ' + holdLabel() + '.';
+  const sc = SCHEMES.find(x => x[0] === S.scheme)[1];
+  $('#vScheme').textContent = sc; $('#sScheme').dataset.say = 'Colors. Currently ' + sc + '.';
+  $('#vText').textContent = S.showText ? 'On' : 'Off'; $('#sText').dataset.say = 'Show Scripture. Currently ' + (S.showText ? 'on.' : 'off.');
+  $('#bShowText .lbl').textContent = S.showText ? 'TURN OFF' : 'TURN ON'; $('#bShowText').dataset.say = S.showText ? 'Turn Scripture off.' : 'Turn Scripture on.';
+  const ts = TEXT_STEPS[S.textStep][0];
+  $('#vSize').textContent = ts; $('#sSize').dataset.say = 'Scripture size. Currently ' + ts + '.';
+  const bs = BTN_STEPS[S.btnStep][0];
+  $('#vBtn').textContent = bs; $('#sBtn').dataset.say = 'Button text size. Currently ' + bs + '.';
+  $('#vVoice').textContent = voiceLabel(); $('#sVoice').dataset.say = 'Voice. Currently ' + voiceLabel() + '. ' + voices.length + ' English voices available.';
+  fitAll();
+}
+function applyLook() {
+  document.documentElement.dataset.scheme = S.scheme;
+  document.documentElement.style.setProperty('--text', TEXT_STEPS[S.textStep][1]);
+  document.documentElement.style.setProperty('--label-scale', String(BTN_STEPS[S.btnStep][1]));
+}
+function changeVoice(d) {
+  loadVoices();
+  if (!voices.length) { speak('No other voices are available on this device.'); return; }
+  let i = voices.findIndex(v => v.voiceURI === S.voice);
+  i += d;
+  if (i >= voices.length) i = -1; else if (i < -1) i = voices.length - 1;
+  S.voice = i < 0 ? '' : voices[i].voiceURI; save(); renderSettings();
+  speak(voiceLabel() + '. ' + SAMPLE);
+}
+
+/* ---------- label fitting: full name, then abbreviation, then wrap ---------- */
+function fitAll() {
+  for (const el of document.querySelectorAll('.btn[data-full]')) {
+    if (el.offsetParent === null) continue;
+    const l = el.querySelector('.lbl'); if (!l) continue;
+    l.classList.add('nowrap'); l.textContent = el.dataset.full;
+    if (l.scrollWidth > l.clientWidth + 1) {
+      l.textContent = el.dataset.short;
+      if (l.scrollWidth > l.clientWidth + 1) l.classList.remove('nowrap');
+    }
+  }
+}
+
+/* ---------- activation ---------- */
+let lastAct = 0, lastEl = null;
+function activate(el) {
+  const now = performance.now();
+  if (el === lastEl && now - lastAct < 400) return;
+  lastAct = now; lastEl = el;
+  el.classList.add('pressed'); setTimeout(() => el.classList.remove('pressed'), 150);
+  switch (el.dataset.act) {
+    case 'testament': { const t = other(book().t); S.book = firstBookOf(t); S.chapter = 1; S.verse = 1; save(); renderReader(); announcePlace(tName(t) + '.'); break; }
+    case 'prevBook': stepBook(-1); break;
+    case 'nextBook': stepBook(1); break;
+    case 'book': openBooks(); break;
+    case 'prevChap': stepChapter(-1); break;
+    case 'nextChap': stepChapter(1); break;
+    case 'chapter': openChapters(S.book); break;
+    case 'prevVerse': stepVerse(-1); break;
+    case 'nextVerse': stepVerse(1); break;
+    case 'play': togglePlay(); break;
+    case 'settings': leaveReader(); renderSettings(); show('settings'); speak('Settings.'); break;
+    case 'listTestament': listTestament = other(listTestament); bookPage = 0; renderBooks(); speak(tName(listTestament) + '. ' + rangeBooks()); break;
+    case 'bookUp': if (bookPage > 0) { bookPage--; renderBooks(); speak(rangeBooks()); } else speak('This is the top of the list.'); break;
+    case 'bookDown': { const n = booksOf(listTestament).length; if ((bookPage + 1) * PAGE_BOOKS < n) { bookPage++; renderBooks(); speak(rangeBooks()); } else speak('This is the end of the list.'); break; }
+    case 'bookItem': { const i = +el.dataset.index; S.book = i; S.chapter = 1; S.verse = 1; save(); returnHome(BOOKS[i].n + ', chapter 1.'); break; }
+    case 'chapUp': if (chapPage > 0) { chapPage--; renderChapters(); speak(rangeChaps()); } else speak('This is the first page.'); break;
+    case 'chapDown': { const n = BOOKS[chapBook].v.length; if ((chapPage + 1) * PAGE_CHAPS < n) { chapPage++; renderChapters(); speak(rangeChaps()); } else speak('This is the last page.'); break; }
+    case 'chapItem': { S.book = chapBook; S.chapter = +el.dataset.chapter; S.verse = 1; save(); returnHome(book().n + ', chapter ' + S.chapter + '.'); break; }
+    case 'back': returnHome('Back.'); break;
+    case 'modeClick': S.mode = 'click'; save(); renderSettings(); speak('Click mode. Buttons activate with a click. Right-click a button to hear its name.'); break;
+    case 'modeHold': S.mode = 'hold'; save(); renderSettings(); speak('Hold mode. Buttons activate when held for ' + holdLabel() + '. A short press only reads the name.'); break;
+    case 'holdShorter': S.holdMs = Math.max(500, S.holdMs - 250); save(); renderSettings(); speak('Hold time ' + holdLabel() + '.'); break;
+    case 'holdLonger': S.holdMs = Math.min(3000, S.holdMs + 250); save(); renderSettings(); speak('Hold time ' + holdLabel() + '.'); break;
+    case 'scheme': { const i = SCHEMES.findIndex(x => x[0] === S.scheme); S.scheme = SCHEMES[(i + 1) % SCHEMES.length][0]; save(); applyLook(); renderSettings(); speak(SCHEMES.find(x => x[0] === S.scheme)[1] + '.'); break; }
+    case 'showText': S.showText = !S.showText; save(); renderSettings(); speak(S.showText ? 'Scripture on.' : 'Scripture off.'); break;
+    case 'textSmaller': S.textStep = Math.max(0, S.textStep - 1); save(); applyLook(); renderSettings(); speak('Scripture size ' + TEXT_STEPS[S.textStep][0] + '.'); break;
+    case 'textLarger': S.textStep = Math.min(TEXT_STEPS.length - 1, S.textStep + 1); save(); applyLook(); renderSettings(); speak('Scripture size ' + TEXT_STEPS[S.textStep][0] + '.'); break;
+    case 'btnSmaller': S.btnStep = Math.max(0, S.btnStep - 1); save(); applyLook(); renderSettings(); speak('Button text ' + BTN_STEPS[S.btnStep][0] + '.'); break;
+    case 'btnLarger': S.btnStep = Math.min(BTN_STEPS.length - 1, S.btnStep + 1); save(); applyLook(); renderSettings(); speak('Button text ' + BTN_STEPS[S.btnStep][0] + '.'); break;
+    case 'voicePrev': changeVoice(-1); break;
+    case 'voiceNext': changeVoice(1); break;
+  }
+}
+function describe(el, suffix) {
+  const t = el.dataset.say || el.textContent.trim();
+  if (!t) return;
+  const text = t + (suffix || '');
+  el.classList.add('describing'); setTimeout(() => el.classList.remove('describing'), 1200);
+  if (playing) { hushAll(); speak(text, () => { if (playing) speakVerse(); }); }
+  else speak(text);
+}
+
+/* ---------- input: click mode (click activates; right-click or long-press reads) and hold mode (hold activates; a short press reads) ---------- */
+let holdTimer = null, holdEl = null, pressTimer = null, suppressClick = false, lastDescribe = 0;
+function cancelHold() {
+  if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+  if (holdEl) { holdEl.classList.remove('holding'); }
+  if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+}
+document.addEventListener('pointerdown', e => {
+  const b = e.target.closest('.btn'); suppressClick = false;
+  if (!b || b.classList.contains('spacer') || e.button !== 0) return;
+  cancelHold(); holdEl = b;
+  if (S.mode === 'hold') {
+    b.style.setProperty('--hold-ms', S.holdMs + 'ms');
+    requestAnimationFrame(() => b.classList.add('holding'));
+    holdTimer = setTimeout(() => { holdTimer = null; b.classList.remove('holding'); suppressClick = true; activate(b); }, S.holdMs);
+  } else {
+    pressTimer = setTimeout(() => { pressTimer = null; suppressClick = true; lastDescribe = performance.now(); describe(b); }, 900);
+  }
+});
+document.addEventListener('pointermove', e => {
+  if (!holdEl || (!holdTimer && !pressTimer)) return;
+  if (e.target.closest('.btn') !== holdEl) { cancelHold(); suppressClick = true; }
+});
+function endPress() {
+  if (holdTimer) {
+    const el = holdEl;
+    cancelHold(); suppressClick = true;
+    lastDescribe = performance.now(); describe(el, ' Hold to activate.');
+  } else if (pressTimer) { cancelHold(); }
+  holdEl = null;
+}
+document.addEventListener('pointerup', endPress);
+document.addEventListener('pointercancel', endPress);
+document.addEventListener('click', e => {
+  const b = e.target.closest('.btn');
+  if (!b || b.classList.contains('spacer')) return;
+  if (suppressClick) { suppressClick = false; return; }
+  if (S.mode === 'hold' && e.detail !== 0) return;
+  activate(b);
+});
+document.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  if (holdTimer) return;
+  if (performance.now() - lastDescribe < 1000) return;
+  const el = e.target.closest('.btn, .set, .panel, .heading');
+  if (el && !el.classList.contains('spacer')) { lastDescribe = performance.now(); describe(el); }
+});
+document.addEventListener('keydown', e => {
+  if (e.target.closest('.btn') && (e.key === ' ' || e.key === 'Enter')) return;
+  if (e.key === 'Escape') { if (screen !== 'reader') returnHome('Back.'); return; }
+  if (screen !== 'reader') return;
+  const map = { ' ': 'play', ArrowLeft: 'prevVerse', ArrowRight: 'nextVerse', ArrowUp: 'prevChap', ArrowDown: 'nextChap', PageUp: 'prevChap', PageDown: 'nextChap', b: 'book', c: 'chapter', s: 'settings' };
+  const act = map[e.key];
+  if (!act) return;
+  e.preventDefault();
+  activate(document.querySelector('[data-act="' + act + '"]'));
+});
+function addFill(b) { if (!b.querySelector('.fill')) { const f = document.createElement('span'); f.className = 'fill'; b.appendChild(f); } }
+
+/* ---------- boot ---------- */
+document.querySelectorAll('.btn').forEach(addFill);
+applyLook(); renderReader(); show('reader');
+requestAnimationFrame(renderPanel);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { fitAll(); renderPanel(); });
+window.addEventListener('resize', () => { fitAll(); renderPanel(); });
+toast('Mockup. Right-click any button to hear its name. The top line shows what is spoken.');
+</script>
