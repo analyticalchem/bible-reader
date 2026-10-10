@@ -153,7 +153,7 @@ function activate(el: HTMLElement): void {
       changed(`${schemeName(settings.scheme)}.`);
       break;
     }
-    case 'showText': settings.showText = !settings.showText; changed(settings.showText ? 'Scripture on.' : 'Scripture off.'); break;
+    case 'showText': settings.showText = !settings.showText; changed(settings.showText ? 'Scripture view on.' : 'Scripture view off.'); break;
     case 'textSmaller': settings.textStep = step(settings.textStep, TEXT_STEPS.length - 1, -1); changed(`Scripture size ${TEXT_STEPS[settings.textStep].name}.`); break;
     case 'textLarger': settings.textStep = step(settings.textStep, TEXT_STEPS.length - 1, 1); changed(`Scripture size ${TEXT_STEPS[settings.textStep].name}.`); break;
     case 'btnSmaller': settings.btnStep = step(settings.btnStep, BTN_STEPS.length - 1, -1); changed(`Button text ${BTN_STEPS[settings.btnStep].name}.`); break;

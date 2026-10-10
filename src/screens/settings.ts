@@ -45,7 +45,7 @@ const ROWS: Row[] = [
   {
     name: 'Show Scripture',
     value: () => onOff(settings.showText),
-    buttons: [{ act: 'showText', label: () => (settings.showText ? 'TURN OFF' : 'TURN ON'), say: () => (settings.showText ? 'Turn Scripture off.' : 'Turn Scripture on.') }],
+    buttons: [{ act: 'showText', label: () => (settings.showText ? 'TURN OFF' : 'TURN ON'), say: () => (settings.showText ? 'Turn Scripture view off.' : 'Turn Scripture view on.') }],
   },
   {
     name: 'Scripture size',
