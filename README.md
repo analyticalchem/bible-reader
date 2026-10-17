@@ -28,9 +28,13 @@ Reading stops when the phone locks or you switch apps; that is a limit of web ap
 - **Book row**: arrows step through books; the name opens the book list.
 - **Chapter row**: arrows step through chapters; the name opens the chapter list.
 - **Play row**: Play/Pause in the middle, verse arrows either side.
-- **Settings** (bottom): click or hold activation, hold time, colors, Scripture on/off and size, button text size, voice, reading speed, whether reading continues into the next chapter, whether button names are spoken.
+- **Settings** (bottom): click or hold activation, hold time, colors, Scripture on/off and size, button text size, voice, reading speed, whether reading continues into the next chapter, book and chapter names, verse arrows, whether button names are spoken, screen reader support, keyboard shortcuts.
 
-Keyboard: Space play/pause, Left/Right verse, Up/Down chapter, B book list, C chapter list, S settings, Esc back.
+Keyboard: Space play/pause, Left/Right verse, Up/Down chapter, B book list, C chapter list, S settings, Esc back. Tab moves between buttons. Shortcuts can be turned off in Settings; Esc always works.
+
+**Screen readers (ChromeVox, VoiceOver):** every button has a name, each screen has a heading, and announcements go to the screen reader. Turn on *Screen reader* in Settings so the app's own voice reads only Scripture and does not talk over the screen reader.
+
+Text in the app also grows with Chrome zoom and the ChromeOS display-size setting.
 
 Add `?captions` to the address to see every spoken phrase on screen while testing.
 

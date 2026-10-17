@@ -71,6 +71,8 @@ export class Speaker {
       const u = new SpeechSynthesisUtterance(text);
       const v = voices.find(opts.voice ?? '');
       if (v) u.voice = v;
+      // Without a chosen voice, still ask for English so a device set to another language reads it correctly.
+      u.lang = v ? v.lang : 'en-US';
       u.rate = opts.rate ?? 1;
       let started = false;
       let settled = false;

@@ -3,6 +3,7 @@ import { position, savePosition, settings } from './state';
 import type { Position, Testament } from './types';
 import type { Speaker } from './speech/speaker';
 import type { VerseReader } from './reader/verse-reader';
+import { announce } from './a11y/announce';
 
 /** Play, pause and navigation. Every action announces itself through the one Speaker. */
 export class Player {
@@ -27,7 +28,25 @@ export class Player {
   }
 
   private say(text: string): Promise<boolean> {
-    return this.speaker.speak(text, this.opts());
+    announce(text);
+    if (!settings.screenReader) return this.speaker.speak(text, this.opts());
+    // The screen reader speaks it. Wait about as long as that takes so Scripture doesn't talk over it.
+    const op = this.op;
+    return new Promise(r => setTimeout(() => r(op === this.op), Math.min(3500, 400 + text.length * 55)));
+  }
+
+  /** Voice preview from Settings: names the voice, then reads a sample in that voice. */
+  sample(label: string, text: string): void {
+    const op = this.stopAll();
+    announce(`${label}.`);
+    void (async () => {
+      if (!settings.screenReader) {
+        await this.speaker.speak(`${label}. ${text}`, this.opts());
+        return;
+      }
+      await new Promise(r => setTimeout(r, 900));
+      if (op === this.op) await this.speaker.speak(text, this.opts());
+    })();
   }
 
   private label(name: string): string {

@@ -365,6 +365,8 @@ plus one or two buttons. Reading a row's name speaks "Hold time, currently
 | Keep reading into the next chapter | On / Off | On |
 | Book and chapter names | Shown / Hidden. Hidden removes the two name buttons so the arrows fill the rows; the book arrows then show an open-book icon with double chevrons and the chapter arrows a page icon with single chevrons, so the two rows read differently without words | Shown |
 | Verse arrows | Shown / Hidden. Hidden removes the previous/next verse arrows and Play fills the row; the keyboard arrows still step verses | Shown |
+| Screen reader | On / Off. On: the app voice reads only Scripture; announcements go to the screen reader through a live region; hold mode is set aside | Off |
+| Keyboard shortcuts | On / Off. Off disables the single-key shortcuts; Escape still goes back | On |
 | Speak button names when pressed | On / Off | On |
 
 Up/Down arrows page through rows: five per page in landscape, three in
@@ -447,6 +449,22 @@ current book, chapter and verse, a live region for location changes.
 ChromeVox and Select-to-speak will therefore work. If someone runs
 ChromeVox, they can turn off "Speak button names" so the two voices do not
 talk over each other.
+
+**Accessibility audit (2026-10-16)**
+
+Checked with axe-core on every screen plus a manual review. Fixed: every
+screen has a heading and a named region; the Scripture panel is a focusable,
+named region that scrolls with the keyboard and allows text selection (for
+Select-to-speak); focus moves to the current book or chapter when a list
+opens and back to the opening button afterwards, and survives settings
+changes; settings rows are named groups and each button names its setting;
+Click/Hold report which is selected; the Play button's name follows its
+state; chapter numbers are named "Chapter N"; announcements are mirrored to
+a polite live region; text has a rem floor so Chrome zoom and ChromeOS
+display size enlarge it, and arrow glyphs and captions shrink to fit short
+buttons; captions under arrows and settings labels are larger; the hold
+progress is a bar along the bottom edge instead of an overlay on the label;
+speech asks for English when no voice is chosen; the load error is an alert.
 
 **Persistence**
 

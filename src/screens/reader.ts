@@ -38,8 +38,17 @@ export function build(): HTMLElement {
   const s = document.createElement('section');
   s.id = 'reader';
   s.className = 'screen';
+  const heading = document.createElement('h1');
+  heading.className = 'sr-only';
+  heading.id = 'readerHeading';
+  heading.textContent = 'Bible reader';
+  s.setAttribute('aria-labelledby', 'readerHeading');
   const panel = div('panel');
   panel.id = 'panel';
+  // Keyboard users can focus the Scripture panel and scroll it; screen readers announce it as a region.
+  panel.tabIndex = 0;
+  panel.setAttribute('role', 'region');
+  panel.setAttribute('aria-label', 'Scripture');
   const controls = div(
     'controls',
     button({ id: 'bTestament', act: 'testament', label: 'OLD TESTAMENT', sub: 'PRESS FOR NEW TESTAMENT' }),
@@ -60,7 +69,7 @@ export function build(): HTMLElement {
     ),
     button({ id: 'bSettings', act: 'settings', label: 'SETTINGS', say: 'Settings.' }),
   );
-  s.append(panel, controls);
+  s.append(heading, panel, controls);
   return s;
 }
 
@@ -86,6 +95,8 @@ export async function update(playing: boolean): Promise<void> {
   setGlyph(bp, playing ? '❚❚' : '▶');
   setSub(bp, playing ? 'PAUSE' : 'PLAY');
   bp.dataset.say = playing ? 'Pause.' : 'Play.';
+  bp.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+  $('#readerHeading').textContent = `${m.name}, chapter ${position.chapter}`;
 
   $('#reader').classList.toggle('text-on', settings.showText);
   const compact = settings.compactNav;
@@ -202,6 +213,7 @@ export async function updatePanel(): Promise<void> {
     centerLine(cur, 0, fresh);
   }
   p.dataset.say = `${bible.reference(position)}.`;
+  p.setAttribute('aria-label', `Scripture, ${bible.meta(position.book).name} chapter ${position.chapter}`);
 }
 
 /** After a resize, put the current verse back in the middle. */

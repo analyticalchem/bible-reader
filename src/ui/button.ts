@@ -57,11 +57,10 @@ export function setGlyph(b: HTMLElement, glyph: string): void {
   if (g) g.textContent = glyph;
 }
 
-/** An invisible placeholder that keeps a list grid's row heights even. */
-export function spacer(): HTMLButtonElement {
-  const b = button({ act: 'none' });
-  b.classList.add('spacer');
-  b.tabIndex = -1;
-  b.setAttribute('aria-hidden', 'true');
-  return b;
+/** An invisible, non-interactive placeholder that keeps a list grid's row heights even. */
+export function spacer(): HTMLDivElement {
+  const d = document.createElement('div');
+  d.className = 'btn spacer';
+  d.setAttribute('aria-hidden', 'true');
+  return d;
 }

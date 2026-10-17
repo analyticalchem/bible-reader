@@ -7,7 +7,9 @@
   --dim: #9a9a9a;
   --font: 'Atkinson Hyperlegible', system-ui, 'Helvetica Neue', Arial, sans-serif;
   --label-scale: 1;
-  --label: calc(clamp(16px, min(4.4vh, 6vw), 46px) * var(--label-scale));
+  /* Button text follows the screen size, with a rem floor so Chrome zoom and the ChromeOS display-size
+     setting still enlarge it (about double at 200% zoom). */
+  --label: calc(max(clamp(16px, min(4.4vh, 6vw), 46px), min(2rem, 6vw)) * var(--label-scale));
   --border: clamp(3px, 0.8vh, 8px);
   --gap: clamp(8px, 1.4vh, 14px);
   --radius: 16px;

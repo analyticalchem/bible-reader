@@ -35,4 +35,8 @@ export interface Settings {
   compactNav: boolean;
   /** Show the previous/next verse arrows beside Play. */
   showVerseArrows: boolean;
+  /** A screen reader is in use: the app voice reads only Scripture; everything else goes to the screen reader. */
+  screenReader: boolean;
+  /** Single-key keyboard shortcuts. */
+  shortcuts: boolean;
 }

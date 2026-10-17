@@ -26,6 +26,19 @@ const ttsReader = new TtsReader(speaker, () => ({ rate: settings.rate, voice: se
 const player = new Player(speaker, ttsReader);
 let screen = 'reader';
 let wasPlaying = false;
+/** The reader button that opened a list or Settings; focus returns to it on the way back. */
+let returnTo = 'play';
+
+/** Moves keyboard focus to the first of these that is on screen. */
+function focusFirst(...selectors: string[]): void {
+  for (const sel of selectors) {
+    const el = document.querySelector<HTMLElement>(sel);
+    if (el && el.offsetParent !== null) {
+      el.focus({ preventScroll: true });
+      return;
+    }
+  }
+}
 
 // Optional on-screen caption of everything spoken: add ?captions to the address.
 if (new URLSearchParams(location.search).has('captions')) {
@@ -72,6 +85,7 @@ function leaveReader(): void {
 
 function goHome(announcement: string): void {
   show('reader');
+  focusFirst(`#reader [data-act="${returnTo}"]`, '#bPlay');
   const was = wasPlaying;
   wasPlaying = false;
   player.resume(was, announcement);
@@ -90,7 +104,7 @@ function changeVoice(dir: 1 | -1): void {
   settings.voice = i < 0 ? '' : list[i].voiceURI;
   saveSettings();
   settingsScreen.render();
-  say(`${voices.label(settings.voice)}. ${SAMPLE}`);
+  player.sample(voices.label(settings.voice), SAMPLE);
 }
 
 function changed(feedback: string): void {
@@ -113,9 +127,9 @@ function activate(el: HTMLElement): void {
     case 'prevVerse': void player.prevVerse(); break;
     case 'nextVerse': void player.nextVerse(); break;
     case 'play': player.toggle(); break;
-    case 'book': { leaveReader(); const a = books.open(); show('books'); books.refit(); say(a); break; }
-    case 'chapter': { leaveReader(); const a = chapters.open(position.book); show('chapters'); say(a); break; }
-    case 'settings': { leaveReader(); const a = settingsScreen.open(); show('settings'); settingsScreen.render(); say(a); break; }
+    case 'book': { returnTo = 'book'; leaveReader(); const a = books.open(); show('books'); books.refit(); focusFirst('#bookList .btn[aria-current]', '#bookList button'); say(a); break; }
+    case 'chapter': { returnTo = 'chapter'; leaveReader(); const a = chapters.open(position.book); show('chapters'); focusFirst('#chapGrid .btn[aria-current]', '#chapGrid button'); say(a); break; }
+    case 'settings': { returnTo = 'settings'; leaveReader(); const a = settingsScreen.open(); show('settings'); settingsScreen.render(); focusFirst('#srows button'); say(a); break; }
     // book list
     case 'listTestament': say(books.switchTestament()); break;
     case 'bookUp': say(books.turnPage(-1)); break;
@@ -163,8 +177,10 @@ function activate(el: HTMLElement): void {
     case 'rateSlower': settings.rate = RATES[step(rateIndex(), RATES.length - 1, -1)].rate; changed(`Reading speed ${RATES[rateIndex()].name}.`); break;
     case 'rateFaster': settings.rate = RATES[step(rateIndex(), RATES.length - 1, 1)].rate; changed(`Reading speed ${RATES[rateIndex()].name}.`); break;
     case 'continue': settings.continueChapters = !settings.continueChapters; changed(settings.continueChapters ? 'Reading will continue into the next chapter.' : 'Reading will stop at the end of each chapter.'); break;
-    case 'compactNav': settings.compactNav = !settings.compactNav; changed(settings.compactNav ? 'Book and chapter names hidden. The arrows are wider. Press B or C on the keyboard for the lists.' : 'Book and chapter names shown.'); break;
+    case 'compactNav': settings.compactNav = !settings.compactNav; changed(settings.compactNav ? `Book and chapter names hidden. The arrows are wider.${settings.shortcuts ? ' Press B or C on the keyboard for the lists.' : ''}` : 'Book and chapter names shown.'); break;
     case 'verseArrows': settings.showVerseArrows = !settings.showVerseArrows; changed(settings.showVerseArrows ? 'Verse arrows shown.' : 'Verse arrows hidden. The play button fills the row. The left and right keys still step verses.'); break;
+    case 'screenReader': settings.screenReader = !settings.screenReader; changed(settings.screenReader ? 'Screen reader support on. The app voice now reads only Scripture.' : 'Screen reader support off. The app voice reads everything again.'); break;
+    case 'shortcuts': settings.shortcuts = !settings.shortcuts; changed(settings.shortcuts ? 'Keyboard shortcuts on.' : 'Keyboard shortcuts off. The Escape key still goes back.'); break;
     case 'speakButtons': settings.speakButtons = !settings.speakButtons; changed(settings.speakButtons ? 'Button names will be spoken.' : 'Button names will not be spoken.'); break;
     default: break;
   }
@@ -185,7 +201,11 @@ async function boot(): Promise<void> {
   try {
     await bible.init();
   } catch {
-    app.textContent = 'The Bible text could not be loaded. Check the internet connection and open the app again.';
+    const msg = document.createElement('p');
+    msg.className = 'load-error';
+    msg.setAttribute('role', 'alert');
+    msg.textContent = 'The Bible text could not be loaded. Check the internet connection and open the app again.';
+    app.replaceChildren(msg);
     return;
   }
   // Keep the saved place inside the data we have.
@@ -208,6 +228,7 @@ async function boot(): Promise<void> {
       if (el) activate(el);
     },
     back: () => goHome('Back.'),
+    enabled: () => settings.shortcuts,
   });
   voices.onReady(() => {
     if (screen === 'settings') settingsScreen.render();

@@ -12,6 +12,9 @@ const LONG_PRESS_MS = 900; // click mode: hold this long to hear a button's name
 const REPEAT_MS = 600; // arrows keep firing at this interval while held
 const DEBOUNCE_MS = 400; // ignore a second activation of the same control this soon after the first
 
+// Screen readers activate buttons with a quick tap or key press, so hold mode is set aside while one is in use.
+const holdMode = (): boolean => settings.mode === 'hold' && !settings.screenReader;
+
 /**
  * Click mode: a click activates; right-click or a long press reads the name.
  * Hold mode: holding for the set time activates; any shorter press reads the name.
@@ -66,7 +69,7 @@ export function installInput(h: InputHandlers): void {
     if (!usable(b) || e.button !== 0) return;
     clearTimers();
     holdEl = b;
-    if (settings.mode === 'hold') {
+    if (holdMode()) {
       b.style.setProperty('--hold-ms', `${settings.holdMs}ms`);
       holdTimer = window.setTimeout(() => {
         holdTimer = null;
@@ -128,7 +131,7 @@ export function installInput(h: InputHandlers): void {
       return;
     }
     // In hold mode a pointer click does nothing; keyboard activation (detail 0) still works.
-    if (settings.mode === 'hold' && e.detail !== 0) return;
+    if (holdMode() && e.detail !== 0) return;
     fire(b);
   });
 

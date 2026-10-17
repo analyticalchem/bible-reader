@@ -12,8 +12,10 @@ export function build(): HTMLElement {
   s.id = 'chapters';
   s.className = 'screen';
   s.hidden = true;
-  const heading = div('heading');
+  const heading = document.createElement('h1');
+  heading.className = 'heading';
   heading.id = 'chapHeading';
+  s.setAttribute('aria-labelledby', 'chapHeading');
   const grid = div('grid');
   grid.id = 'chapGrid';
   s.append(
@@ -53,6 +55,7 @@ function render(): void {
       say: `Chapter ${c}.${current ? ' This is the current chapter.' : ''}`,
       data: { chapter: String(c) },
     });
+    btn.setAttribute('aria-label', `Chapter ${c}`);
     if (current) {
       btn.classList.add('filled');
       btn.setAttribute('aria-current', 'true');

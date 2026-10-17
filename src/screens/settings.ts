@@ -99,6 +99,16 @@ const ROWS: Row[] = [
     value: () => onOff(settings.speakButtons),
     buttons: [{ act: 'speakButtons', label: () => (settings.speakButtons ? 'TURN OFF' : 'TURN ON'), say: () => (settings.speakButtons ? 'Stop speaking button names.' : 'Speak button names.') }],
   },
+  {
+    name: 'Screen reader',
+    value: () => onOff(settings.screenReader),
+    buttons: [{ act: 'screenReader', label: () => (settings.screenReader ? 'TURN OFF' : 'TURN ON'), say: () => (settings.screenReader ? 'Turn off screen reader support.' : 'Turn on screen reader support. The app voice will read only Scripture, and everything else goes to your screen reader.') }],
+  },
+  {
+    name: 'Keyboard shortcuts',
+    value: () => onOff(settings.shortcuts),
+    buttons: [{ act: 'shortcuts', label: () => (settings.shortcuts ? 'TURN OFF' : 'TURN ON'), say: () => (settings.shortcuts ? 'Turn off keyboard shortcuts.' : 'Turn on keyboard shortcuts.') }],
+  },
 ];
 
 /** Five rows per page in landscape; three in portrait, where each row stacks its two buttons. */
@@ -106,12 +116,19 @@ export const perPage = (): number => (matchMedia('(max-aspect-ratio: 1/1)').matc
 let page = 0;
 const pages = () => Math.ceil(ROWS.length / perPage());
 const text = (v: string | (() => string)) => (typeof v === 'function' ? v() : v);
+const sentence = (s: string) => s.charAt(0) + s.slice(1).toLowerCase();
 
 export function build(): HTMLElement {
   const s = document.createElement('section');
   s.id = 'settings';
   s.className = 'screen';
   s.hidden = true;
+  const heading = document.createElement('h1');
+  heading.className = 'sr-only';
+  heading.id = 'settingsHeading';
+  heading.textContent = 'Settings';
+  s.setAttribute('aria-labelledby', 'settingsHeading');
+  s.appendChild(heading);
   const rows = div('srows');
   rows.id = 'srows';
   s.append(
@@ -131,28 +148,43 @@ export function build(): HTMLElement {
 
 export function render(): void {
   const el = $('#srows');
+  // Re-rendering replaces the buttons; remember which one had keyboard focus and put focus back on it.
+  const focused = (document.activeElement as HTMLElement | null)?.closest?.('#srows .btn') as HTMLElement | null;
+  const keepAct = focused?.dataset.act;
   el.innerHTML = '';
   const n = perPage();
   page = Math.min(page, pages() - 1);
   const slice = ROWS.slice(page * n, page * n + n);
-  for (const r of slice) {
+  slice.forEach((r, k) => {
+    const id = `set-${page * n + k}`;
     const set = div('set', span('name', r.name), span('val', r.value()));
+    set.id = id;
     set.dataset.say = `${r.name}. Currently ${r.value()}.`;
+    // Each row is a named group, and each button names its setting, so "Turn off" is never ambiguous.
     const row = div('srow', set);
+    row.setAttribute('role', 'group');
+    row.setAttribute('aria-label', `${r.name}, currently ${r.value()}`);
     for (const b of r.buttons) {
-      const btn = button({ act: b.act, label: text(b.label), say: text(b.say), id: b.id, repeat: b.repeat });
+      const visible = text(b.label);
+      const btn = button({ act: b.act, label: visible, say: text(b.say), id: b.id, repeat: b.repeat });
+      btn.setAttribute('aria-label', `${sentence(visible)}, ${r.name}`);
       if (r.buttons.length === 1) btn.classList.add('span2');
-      if (b.selected?.()) btn.classList.add('filled');
+      if (b.selected) {
+        const on = b.selected();
+        btn.setAttribute('aria-pressed', String(on));
+        if (on) btn.classList.add('filled');
+      }
       row.appendChild(btn);
     }
     el.appendChild(row);
-  }
+  });
   for (let k = slice.length; k < n; k++) {
     const sp = spacer();
     sp.classList.add('srow');
     el.appendChild(sp);
   }
   fitAll($('#settings'));
+  if (keepAct) el.querySelector<HTMLElement>(`[data-act="${keepAct}"]`)?.focus({ preventScroll: true });
 }
 
 export function open(): string {

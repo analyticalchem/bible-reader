@@ -17,6 +17,12 @@ export function build(): HTMLElement {
   s.id = 'books';
   s.className = 'screen';
   s.hidden = true;
+  const heading = document.createElement('h1');
+  heading.className = 'sr-only';
+  heading.id = 'booksHeading';
+  heading.textContent = 'Choose a book';
+  s.setAttribute('aria-labelledby', 'booksHeading');
+  s.appendChild(heading);
   const list = div('list');
   list.id = 'bookList';
   s.append(

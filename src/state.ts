@@ -8,12 +8,14 @@ export const SCHEMES: { id: Scheme; name: string }[] = [
   { id: 'by', name: 'Black on pale yellow' },
 ];
 
+// Each size follows the screen height, but never drops below a size in rem, so Chrome zoom and the
+// ChromeOS display-size setting still make Scripture larger. The two match on a 720-pixel-tall screen.
 export const TEXT_STEPS = [
-  { name: 'Small', size: '4vh' },
-  { name: 'Medium', size: '5.3vh' },
-  { name: 'Large', size: '7vh' },
-  { name: 'Extra large', size: '9.4vh' },
-  { name: 'Huge', size: '11.8vh' },
+  { name: 'Small', size: 'max(4vh, 1.8rem)' },
+  { name: 'Medium', size: 'max(5.3vh, 2.4rem)' },
+  { name: 'Large', size: 'max(7vh, 3.15rem)' },
+  { name: 'Extra large', size: 'max(9.4vh, 4.2rem)' },
+  { name: 'Huge', size: 'max(11.8vh, 5.3rem)' },
 ];
 
 export const BTN_STEPS = [
@@ -46,6 +48,8 @@ const DEFAULT_SETTINGS: Settings = {
   speakButtons: true,
   compactNav: false,
   showVerseArrows: true,
+  screenReader: false,
+  shortcuts: true,
 };
 
 const DEFAULT_POSITION: Position = { book: 'GEN', chapter: 1, verse: 1 };
